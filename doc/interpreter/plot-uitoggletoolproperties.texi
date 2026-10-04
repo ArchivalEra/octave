@@ -1,0 +1,250 @@
+@c DO NOT EDIT!  Generated automatically by genpropdoc.m.
+
+@c Copyright (C) 2014-2026 The Octave Project Developers
+@c
+@c See the file COPYRIGHT.md in the top-level directory of this
+@c distribution or <https://octave.org/copyright/>.
+@c
+@c This file is part of Octave.
+@c
+@c Octave is free software: you can redistribute it and/or modify it
+@c under the terms of the GNU General Public License as published by
+@c the Free Software Foundation, either version 3 of the License, or
+@c (at your option) any later version.
+@c
+@c Octave is distributed in the hope that it will be useful, but
+@c WITHOUT ANY WARRANTY; without even the implied warranty of
+@c MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+@c GNU General Public License for more details.
+@c
+@c You should have received a copy of the GNU General Public License
+@c along with Octave; see the file COPYING.  If not, see
+@c <https://www.gnu.org/licenses/>.
+
+Properties of @code{uitoggletool} objects (@pxref{XREFuitoggletool,,uitoggletool}):
+
+@subsubheading Categories:
+
+@ref{XREFuitoggletoolcategoryAppearance,,@w{Appearance}}@: | @ref{XREFuitoggletoolcategoryCallbackExecution,,@w{Callback Execution}}@: | @ref{XREFuitoggletoolcategoryCreation/Deletion,,@w{Creation/Deletion}}@: | @ref{XREFuitoggletoolcategoryDisplay,,@w{Display}}@: | @ref{XREFuitoggletoolcategoryMouseInteraction,,@w{Mouse Interaction}}@: | @ref{XREFuitoggletoolcategoryObjectIdentification,,@w{Object Identification}}@: | @ref{XREFuitoggletoolcategoryParent/Children,,@w{Parent/Children}}@: | @ref{XREFuitoggletoolcategoryToggleOperation,,@w{Toggle Operation}}@: 
+
+@anchor{XREFuitoggletoolcategoryAppearance}
+@subsubheading Appearance
+
+@table @asis
+
+@anchor{XREFuitoggletool__named_icon__}
+@prindex uitoggletool __named_icon__
+@item @code{__named_icon__}: string, def. @qcode{""}
+The name of an bundled icon file to use as the image for the toggletool object.
+
+
+@anchor{XREFuitoggletoolcdata}
+@prindex uitoggletool cdata
+@item @code{cdata}: array, def. @code{[](0x0)}
+Image data used to represent the toggletool object, stored as a M x N x 3 RGB array.
+
+
+@anchor{XREFuitoggletoolseparator}
+@prindex uitoggletool separator
+@item @code{separator}: @{@qcode{"off"}@} | @qcode{"on"}
+Setting to draw a vertical line to the left of the toggletool.
+
+@end table
+
+@anchor{XREFuitoggletoolcategoryCallbackExecution}
+@subsubheading Callback Execution
+
+@table @asis
+
+@anchor{XREFuitoggletoolbusyaction}
+@prindex uitoggletool busyaction
+@item @code{busyaction}: @qcode{"cancel"} | @{@qcode{"queue"}@}
+Define how Octave handles the execution of this object's callback properties when it is unable to interrupt another object's executing callback.  This is only relevant when the currently executing callback object has its @code{interruptible} property set to @qcode{"off"}.  The @code{busyaction} property of the interrupting callback object indicates whether the interrupting callback is queued (@qcode{"queue"} (default)) or discarded (@qcode{"cancel"}).
+@xref{Callbacks,,@w{Callbacks section}}.
+
+
+@anchor{XREFuitoggletoolclickedcallback}
+@prindex uitoggletool clickedcallback
+@item @code{clickedcallback}: string, def. @code{[](0x0)}
+A string consisting of a valid Octave expression that will be executed whenever this control object is clicked.
+
+
+@anchor{XREFuitoggletoolinterruptible}
+@prindex uitoggletool interruptible
+@item @code{interruptible}: @qcode{"off"} | @{@qcode{"on"}@}
+Specify whether this object's callback functions may be interrupted by other callbacks.  By default @code{interruptible} is @qcode{"on"} and callbacks that make use of @code{drawnow}, @code{figure}, @code{waitfor}, @code{getframe} or @code{pause} functions are eventually interrupted.
+@xref{Callbacks,,@w{Callbacks section}}.
+
+
+@anchor{XREFuitoggletooloffcallback}
+@prindex uitoggletool offcallback
+@item @code{offcallback}: string, def. @code{[](0x0)}
+A string consisting of a valid Octave expression that will be executed whenever this control object is toggled off.
+
+
+@anchor{XREFuitoggletooloncallback}
+@prindex uitoggletool oncallback
+@item @code{oncallback}: string, def. @code{[](0x0)}
+A string consisting of a valid Octave expression that will be executed whenever this control object is toggled on.
+
+@end table
+
+@anchor{XREFuitoggletoolcategoryCreation/Deletion}
+@subsubheading Creation/Deletion
+
+@table @asis
+
+@anchor{XREFuitoggletoolbeingdeleted}
+@prindex uitoggletool beingdeleted
+@item @code{beingdeleted}: @{@qcode{"off"}@} | @qcode{"on"}
+Property indicating that a function has initiated deletion of the object.  @code{beingdeleted} is set to true until the object no longer exists.
+
+
+@anchor{XREFuitoggletoolcreatefcn}
+@prindex uitoggletool createfcn
+@item @code{createfcn}: string | function handle, def. @code{[](0x0)}
+Callback function executed immediately after uitoggletool has been created.  Function is set by using default property on root object, e.g., @code{set (groot, "defaultuitoggletoolcreatefcn", 'disp ("uitoggletool created!")')}.
+
+For information on how to write graphics listener functions, @pxref{Callbacks,,@w{Callbacks section}}.
+
+
+@anchor{XREFuitoggletooldeletefcn}
+@prindex uitoggletool deletefcn
+@item @code{deletefcn}: string | function handle, def. @code{[](0x0)}
+Callback function executed immediately before uitoggletool is deleted.
+
+For information on how to write graphics listener functions, @pxref{Callbacks,,@w{Callbacks section}}.
+
+@end table
+
+@anchor{XREFuitoggletoolcategoryDisplay}
+@subsubheading Display
+
+@table @asis
+
+@anchor{XREFuitoggletoolclipping}
+@prindex uitoggletool clipping
+@item @code{clipping}: @qcode{"off"} | @{@qcode{"on"}@}
+If @code{clipping} is @qcode{"on"}, the uitoggletool is clipped in its parent axes limits.
+
+
+@anchor{XREFuitoggletoolvisible}
+@prindex uitoggletool visible
+@item @code{visible}: @qcode{"off"} | @{@qcode{"on"}@}
+If @code{visible} is @qcode{"off"}, the uitoggletool is not rendered on screen.
+
+@end table
+
+@anchor{XREFuitoggletoolcategoryMouseInteraction}
+@subsubheading Mouse Interaction
+
+@table @asis
+
+@anchor{XREFuitoggletoolbuttondownfcn}
+@prindex uitoggletool buttondownfcn
+@item @code{buttondownfcn}: string | function handle, def. @code{[](0x0)}
+@code{buttondownfcn} is unused.
+
+
+@anchor{XREFuitoggletoolcontextmenu}
+@prindex uitoggletool contextmenu
+@item @code{contextmenu}: graphics handle, def. @code{[](0x0)}
+Graphics handle of the uicontextmenu object that is currently associated to this uitoggletool object.
+
+
+@anchor{XREFuitoggletoolhittest}
+@prindex uitoggletool hittest
+@item @code{hittest}: @qcode{"off"} | @{@qcode{"on"}@}
+Specify whether uitoggletool processes mouse events or passes them to ancestors of the object.  When enabled, the object may respond to mouse clicks by evaluating the @qcode{"buttondownfcn"}, showing the uicontextmenu, and eventually becoming the root @qcode{"currentobject"}.  This property is only relevant when the object can accept mouse clicks which is determined by the @qcode{"pickableparts"} property.  @xref{XREFuitoggletoolpickableparts,,@w{pickableparts property}}.
+
+
+@anchor{XREFuitoggletoolpickableparts}
+@prindex uitoggletool pickableparts
+@item @code{pickableparts}: @qcode{"all"} | @qcode{"none"} | @{@qcode{"visible"}@}
+Specify whether uitoggletool will accept mouse clicks.  By default, @code{pickableparts} is @qcode{"visible"} and only visible parts of the uitoggletool or its children may react to mouse clicks.  When @code{pickableparts} is @qcode{"all"} both visible and invisible parts (or children) may react to mouse clicks.  When @code{pickableparts} is @qcode{"none"} mouse clicks on the object are ignored and transmitted to any objects underneath this one.  When an object is configured to accept mouse clicks the @qcode{"hittest"} property will determine how they are processed.  @xref{XREFuitoggletoolhittest,,@w{hittest property}}.
+
+
+@anchor{XREFuitoggletoolselected}
+@prindex uitoggletool selected
+@item @code{selected}: @{@qcode{"off"}@} | @qcode{"on"}
+Property indicates whether this uitoggletool is selected.
+
+
+@anchor{XREFuitoggletoolselectionhighlight}
+@prindex uitoggletool selectionhighlight
+@item @code{selectionhighlight}: @qcode{"off"} | @{@qcode{"on"}@}
+If @code{selectionhighlight} is @qcode{"on"}, then the uitoggletool's selection state is visually highlighted.
+
+
+@anchor{XREFuitoggletooltooltipstring}
+@prindex uitoggletool tooltipstring
+@item @code{tooltipstring}: string, def. @qcode{""}
+A text string that appears in a tooltip when the mouse pointer hovers over the toggletool object.
+
+@end table
+
+@anchor{XREFuitoggletoolcategoryObjectIdentification}
+@subsubheading Object Identification
+
+@table @asis
+
+@anchor{XREFuitoggletooltag}
+@prindex uitoggletool tag
+@item @code{tag}: string, def. @qcode{""}
+A user-defined string to label the graphics object.
+
+
+@anchor{XREFuitoggletooltype}
+@prindex uitoggletool type
+@item @code{type} (read-only): string
+Class name of the graphics object.  @code{type} is always @qcode{"uitoggletool"}.
+
+
+@anchor{XREFuitoggletooluserdata}
+@prindex uitoggletool userdata
+@item @code{userdata}: Any Octave data, def. @code{[](0x0)}
+User-defined data to associate with the graphics object.
+
+@end table
+
+@anchor{XREFuitoggletoolcategoryParent/Children}
+@subsubheading Parent/Children
+
+@table @asis
+
+@anchor{XREFuitoggletoolchildren}
+@prindex uitoggletool children
+@item @code{children} (read-only): vector of graphics handles, def. @code{[](0x0)}
+Graphics handles of the uitoggletool's children.
+
+
+@anchor{XREFuitoggletoolhandlevisibility}
+@prindex uitoggletool handlevisibility
+@item @code{handlevisibility}: @qcode{"callback"} | @qcode{"off"} | @{@qcode{"on"}@}
+If @code{handlevisibility} is @qcode{"off"}, the uitoggletool's handle is not visible in its parent's @qcode{"children"} property.
+
+
+@anchor{XREFuitoggletoolparent}
+@prindex uitoggletool parent
+@item @code{parent}: graphics handle
+Handle of the parent graphics object.
+
+@end table
+
+@anchor{XREFuitoggletoolcategoryToggleOperation}
+@subsubheading Toggle Operation
+
+@table @asis
+
+@anchor{XREFuitoggletoolenable}
+@prindex uitoggletool enable
+@item @code{enable}: @qcode{"off"} | @{@qcode{"on"}@}
+Sets whether this toggletool object is active or is grayed out.
+
+
+@anchor{XREFuitoggletoolstate}
+@prindex uitoggletool state
+@item @code{state}: @{@qcode{"off"}@} | @qcode{"on"}
+The current @qcode{"on"} or @qcode{"off"} state of the toggletool object.
+
+@end table

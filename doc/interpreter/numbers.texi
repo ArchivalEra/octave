@@ -1,0 +1,2141 @@
+@c DO NOT EDIT!  Generated automatically by munge-texi.pl.
+
+@c Copyright (C) 1996-2026 The Octave Project Developers
+@c
+@c This file is part of Octave.
+@c
+@c Octave is free software: you can redistribute it and/or modify it
+@c under the terms of the GNU General Public License as published by
+@c the Free Software Foundation, either version 3 of the License, or
+@c (at your option) any later version.
+@c
+@c Octave is distributed in the hope that it will be useful, but
+@c WITHOUT ANY WARRANTY; without even the implied warranty of
+@c MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+@c GNU General Public License for more details.
+@c
+@c You should have received a copy of the GNU General Public License
+@c along with Octave; see the file COPYING.  If not, see
+@c <https://www.gnu.org/licenses/>.
+
+@node Numeric Data Types
+@chapter Numeric Data Types
+@cindex numeric constant
+@cindex numeric value
+
+A @dfn{numeric constant} may be a scalar, a vector, or a matrix, and it may
+contain complex values.
+
+The simplest form of a numeric constant, a scalar, is a single number.  Note
+that by default numbers are represented within Octave by IEEE@tie{}754 double
+precision (binary64) floating-point format (complex constants are stored as
+pairs of binary64 values).  It is, however, possible to represent true integers
+as described in @ref{Integer Data Types}.
+
+If the numeric constant is a real integer, it can be defined in decimal,
+hexadecimal, or binary notation.  An important difference, however, is that
+decimal constants will be stored as binary64 values while using hexadecimal or
+binary notation will result in a true integer with a storage class just large
+enough to hold the specified number.  Hexadecimal notation starts with
+@samp{0x} or @samp{0X}, binary notation starts with @samp{0b} or @samp{0B},
+otherwise decimal notation is assumed.  As a consequence, @samp{0b} is not a
+hexadecimal number, in fact, it is not a valid number at all.
+
+For better readability, digits may be partitioned by the underscore separator
+@samp{_}, which is ignored by the Octave interpreter.  Here are some examples
+of real-valued integer constants, which all represent the same value:
+
+@example
+@group
+42            # decimal notation, binary64
+0x2A          # hexadecimal notation
+0b101010      # binary notation
+0b10_1010     # underscore notation
+round (42.1)  # also binary64
+@end group
+@end example
+
+In decimal notation, the numeric constant may be denoted as decimal fraction
+or even in scientific (exponential) notation.  Note that this is not possible
+for hexadecimal or binary notation.  Again, in the following example all
+numeric constants represent the same value:
+
+@example
+@group
+.105
+1.05e-1
+.00105e+2
+@end group
+@end example
+
+Unlike most programming languages, complex numeric constants are denoted as
+the sum of real and imaginary parts.  The imaginary part is denoted by a
+real-valued numeric constant followed immediately by a complex value indicator
+(@samp{i}, @samp{j}, @samp{I}, or @samp{J} which represents
+@tex
+  $\sqrt{-1}$).
+@end tex
+@ifnottex
+  @code{sqrt (-1)}).
+@end ifnottex
+No spaces are allowed between the numeric constant and the complex value
+indicator.  All complex values are stored as pairs of binary64 values and the
+use of hexadecimal or binary notation does @emph{not} result in a true integer.
+Some examples of complex numeric constants that all represent the same value:
+
+@example
+@group
+3 + 42i
+3 + 42j
+3 + 42I
+3 + 42J
+3.0 + 42.0i
+3.0 + 0x2Ai
+3.0 + 0b10_1010i
+0.3e1 + 420e-1i
+@end group
+@end example
+
+@c double libinterp/octave-value/ov.cc
+@anchor{XREFdouble}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{y} =} double (@var{x})
+Convert @var{x} to double precision type.
+@xseealso{@ref{XREFsingle,,single}}
+@end deftypefn
+
+
+@c complex libinterp/corefcn/data.cc
+@anchor{XREFcomplex}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{z} =} complex (@var{x})
+@deftypefnx {} {@var{z} =} complex (@var{re}, @var{im})
+Return a complex value from real arguments.
+
+With 1 real argument @var{x}, return the complex result
+@w{@code{@var{x} + 0i}}.
+
+With 2 real arguments, return the complex result
+@w{@code{@var{re} + @var{im}i}}.
+@code{complex} can often be more convenient than expressions such as
+@w{@code{a + b*i}}.
+For example:
+
+@example
+@group
+complex ([1, 2], [3, 4])
+  @xresult{} [ 1 + 3i   2 + 4i ]
+@end group
+@end example
+@xseealso{@ref{XREFreal,,real}, @ref{XREFimag,,imag}, @ref{XREFiscomplex,,iscomplex}, @ref{XREFabs,,abs}, @ref{XREFarg,,arg}}
+@end deftypefn
+
+
+Octave automatically "narrows" complex types to real types when the imaginary
+part is zero.  The interpreter performs this narrowing whenever it gets the
+opportunity, in order to save memory, and to emulate @sc{matlab} behavior.  For
+example, if a variable initially has the complex value @code{4 + 2i} and
+subsequently the value @code{2i} is subtracted from it, then it becomes the
+real type @code{4} and not the complex type @code{4 + 0i}.  Testing whether the
+resultant type is complex using the expression @code{iscomplex (4+2i - 2i)}
+returns false.
+
+To ensure that a value is of complex type even with a zero imaginary part,
+use @code{complex (4, 0)} instead of @code{4 + 0i}.  But even then, the
+interpreter will still narrow the type to real at the next change done to it
+(such as adding 1 to it), unless its imaginary part truly becomes nonzero.
+
+@menu
+* Matrices::
+* Ranges::
+* Single Precision Data Types::
+* Integer Data Types::
+* Bit Manipulations::
+* Logical Values::
+* Automatic Conversion of Data Types::
+* Predicates for Numeric Objects::
+@end menu
+
+@node Matrices
+@section Matrices
+@cindex matrices
+
+@opindex [
+@opindex ]
+@opindex ;
+@opindex ,
+
+It is easy to define a matrix of values in Octave.  The size of the
+matrix is determined automatically, so it is not necessary to explicitly
+state the dimensions.  The expression
+
+@example
+a = [1, 2; 3, 4]
+@end example
+
+@noindent
+results in the matrix
+@tex
+$$ a = \left[ \matrix{ 1 & 2 \cr 3 & 4 } \right] $$
+@end tex
+@ifnottex
+
+@example
+@group
+
+        /      \
+        | 1  2 |
+  a  =  |      |
+        | 3  4 |
+        \      /
+
+@end group
+@end example
+
+@end ifnottex
+
+Elements of a matrix may be arbitrary expressions, provided that the
+dimensions all make sense when combining the various pieces.  For
+example, given the above matrix, the expression
+
+@example
+[ a, a ]
+@end example
+
+@noindent
+produces the matrix
+
+@example
+@group
+ans =
+
+  1  2  1  2
+  3  4  3  4
+@end group
+@end example
+
+@noindent
+but the expression
+
+@example
+[ a, 1 ]
+@end example
+
+@noindent
+produces the error
+
+@example
+error: number of rows must match (1 != 2) near line 13, column 6
+@end example
+
+@noindent
+(assuming that this expression was entered as the first thing on line
+13, of course).
+
+Inside the square brackets that delimit a matrix expression, Octave
+looks at the surrounding context to determine whether spaces and newline
+characters should be converted into element and row separators, or
+simply ignored, so an expression like
+
+@example
+@group
+a = [ 1 2
+      3 4 ]
+@end group
+@end example
+
+@noindent
+will work.  However, some possible sources of confusion remain.  For
+example, in the expression
+
+@example
+[ 1 - 1 ]
+@end example
+
+@noindent
+the @samp{-} is treated as a binary operator and the result is the
+scalar 0, but in the expression
+
+@example
+[ 1 -1 ]
+@end example
+
+@noindent
+the @samp{-} is treated as a unary operator and the result is the
+vector @code{[ 1, -1 ]}.  Similarly, the expression
+
+@example
+[ sin (pi) ]
+@end example
+
+@noindent
+will be parsed as
+
+@example
+[ sin, (pi) ]
+@end example
+
+@noindent
+and will result in an error since the @code{sin} function will be
+called with no arguments.  To get around this, you must omit the space
+between @code{sin} and the opening parenthesis, or enclose the
+expression in a set of parentheses:
+
+@example
+[ (sin (pi)) ]
+@end example
+
+Whitespace surrounding the single quote character (@samp{'}, used as a
+transpose operator and for delimiting character strings) can also cause
+confusion.  Given @code{a = 1}, the expression
+
+@example
+[ 1 a' ]
+@end example
+
+@noindent
+results in the single quote character being treated as a
+transpose operator and the result is the vector @code{[ 1, 1 ]}, but the
+expression
+
+@example
+[ 1 a ' ]
+@end example
+
+@noindent
+produces the error message
+
+@example
+@group
+parse error:
+
+  syntax error
+
+>>> [ 1 a ' ]
+              ^
+@end group
+@end example
+
+@noindent
+because not doing so would cause trouble when parsing the valid expression
+
+@example
+[ a 'foo' ]
+@end example
+
+For clarity, it is probably best to always use commas and semicolons to
+separate matrix elements and rows.
+
+The maximum number of elements in a matrix is fixed when Octave is compiled.
+The allowable number can be queried with the function @code{sizemax}.  Note
+that other factors, such as the amount of memory available on your machine,
+may limit the maximum size of matrices to something smaller.
+
+@c sizemax libinterp/corefcn/bitfcns.cc
+@anchor{XREFsizemax}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{max_numel} =} sizemax ()
+Return the largest value allowed for the size of an array.
+
+If Octave is compiled with 64-bit indexing, the result is of class int64,
+otherwise it is of class int32.  The maximum array size is slightly smaller
+than the maximum value allowable for the relevant class as reported by
+@code{intmax}.
+@xseealso{@ref{XREFintmax,,intmax}}
+@end deftypefn
+
+
+When you type a matrix or the name of a variable whose value is a
+matrix, Octave responds by printing the matrix in with neatly aligned
+rows and columns.  If the rows of the matrix are too large to fit on the
+screen, Octave splits the matrix and displays a header before each
+section to indicate which columns are being displayed.  You can use the
+following variables to control the format of the output.
+
+@c output_precision libinterp/corefcn/pr-flt-fmt.cc
+@anchor{XREFoutput_precision}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{val} =} output_precision ()
+@deftypefnx {} {@var{old_val} =} output_precision (@var{new_val})
+@deftypefnx {} {@var{old_val} =} output_precision (@var{new_val}, "local")
+Query or set the internal variable that specifies the minimum number of
+significant figures to display for numeric output.
+
+Note that regardless of the value set for @code{output_precision}, the
+number of digits of precision displayed is limited to 16 for double
+precision values and 7 for single precision values.  Also, calls to the
+@code{format} function that change numeric display can also change the set
+value for @code{output_precision}.
+
+When called from inside a function with the @qcode{"local"} option, the
+variable is changed locally for the function and any subroutines it calls.
+The original variable value is restored when exiting the function.
+
+@xseealso{@ref{XREFformat,,format}, @ref{XREFfixed_point_format,,fixed_point_format}}
+@end deftypefn
+
+
+It is possible to achieve a wide range of output styles by using
+different values of @code{output_precision}.  Reasonable combinations can be
+set using the @code{format} function.  @xref{Basic Input and Output}.
+
+@c split_long_rows libinterp/corefcn/pr-output.cc
+@anchor{XREFsplit_long_rows}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{val} =} split_long_rows ()
+@deftypefnx {} {@var{old_val} =} split_long_rows (@var{new_val})
+@deftypefnx {} {@var{old_val} =} split_long_rows (@var{new_val}, "local")
+Query or set the internal variable that controls whether rows of a matrix
+may be split when displayed to a terminal window.
+
+If the rows are split, Octave will display the matrix in a series of smaller
+pieces, each of which can fit within the limits of your terminal width and
+each set of rows is labeled so that you can easily see which columns are
+currently being displayed.  For example:
+
+@example
+@group
+octave:13> rand (2,10)
+ans =
+
+ Columns 1 through 6:
+
+  0.75883  0.93290  0.40064  0.43818  0.94958  0.16467
+  0.75697  0.51942  0.40031  0.61784  0.92309  0.40201
+
+ Columns 7 through 10:
+
+  0.90174  0.11854  0.72313  0.73326
+  0.44672  0.94303  0.56564  0.82150
+@end group
+@end example
+
+When called from inside a function with the @qcode{"local"} option, the
+variable is changed locally for the function and any subroutines it calls.
+The original variable value is restored when exiting the function.
+@xseealso{@ref{XREFformat,,format}}
+@end deftypefn
+
+
+Octave automatically switches to scientific notation when values become
+very large or very small.  This guarantees that you will see several
+significant figures for every value in a matrix.  If you would prefer to
+see all values in a matrix printed in a fixed point format, you can use
+the function @code{fixed_point_format}.  But doing so is not
+recommended, because it can produce output that can easily be
+misinterpreted.
+
+@c fixed_point_format libinterp/corefcn/pr-output.cc
+@anchor{XREFfixed_point_format}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{val} =} fixed_point_format ()
+@deftypefnx {} {@var{old_val} =} fixed_point_format (@var{new_val})
+@deftypefnx {} {@var{old_val} =} fixed_point_format (@var{new_val}, "local")
+Query or set the internal variable that controls whether Octave will
+use a scaled format to print matrix values.
+
+The scaled format prints a scaling factor on the first line of output chosen
+such that the largest matrix element can be written with a single leading
+digit.  For example:
+
+@example
+@group
+fixed_point_format (true)
+logspace (1, 7, 5)'
+ans =
+
+  1.0e+07  *
+
+  0.00000
+  0.00003
+  0.00100
+  0.03162
+  1.00000
+@end group
+@end example
+
+@noindent
+Notice that the first value appears to be 0 when it is actually 1.  Because
+of the possibility for confusion you should be careful about enabling
+@code{fixed_point_format}.
+
+When called from inside a function with the @qcode{"local"} option, the
+variable is changed locally for the function and any subroutines it calls.
+The original variable value is restored when exiting the function.
+@xseealso{@ref{XREFformat,,format}, @ref{XREFoutput_precision,,output_precision}}
+@end deftypefn
+
+
+@menu
+* Empty Matrices::
+@end menu
+
+@node Empty Matrices
+@subsection Empty Matrices
+
+A matrix may have one or both dimensions zero, and operations on empty
+matrices are handled as described by @nospell{Carl de Boor} in
+@qcode{"An Empty Exercise"}, @cite{SIGNUM}, @w{Vol.@: 25}, @w{pp.@: 2}--6, 1990
+and @nospell{C. N. Nett and W. M. Haddad}, in @qcode{"A System-Theoretic
+Appropriate Realization of the Empty Matrix Concept"}, @cite{IEEE Transactions
+on Automatic Control}, @w{Vol.@: 38}, @w{No.@: 5}, @w{May 1993}.
+@tex
+Briefly, given a scalar $s$, an $m\times n$ matrix $M_{m\times n}$,
+and an $m\times n$ empty matrix $[\,]_{m\times n}$ (with either one or
+both dimensions equal to zero), the following are true:
+$$
+\eqalign{%
+s \cdot [\,]_{m\times n} = [\,]_{m\times n} \cdot s &= [\,]_{m\times n}\cr
+[\,]_{m\times n} + [\,]_{m\times n} &= [\,]_{m\times n}\cr
+[\,]_{0\times m} \cdot M_{m\times n} &= [\,]_{0\times n}\cr
+M_{m\times n} \cdot [\,]_{n\times 0} &= [\,]_{m\times 0}\cr
+[\,]_{m\times 0} \cdot [\,]_{0\times n} &=  0_{m\times n}}
+$$
+@end tex
+@ifnottex
+Briefly, given a scalar @var{s}, an @var{m} by
+@var{n} matrix @code{M(mxn)}, and an @var{m} by @var{n} empty matrix
+@code{[](mxn)} (with either one or both dimensions equal to zero), the
+following are true:
+
+@example
+@group
+s * [](mxn) = [](mxn) * s = [](mxn)
+
+    [](mxn) + [](mxn) = [](mxn)
+
+    [](0xm) *  M(mxn) = [](0xn)
+
+     M(mxn) * [](nx0) = [](mx0)
+
+    [](mx0) * [](0xn) =  0(mxn)
+@end group
+@end example
+
+@end ifnottex
+
+By default, dimensions of the empty matrix are printed along with the
+empty matrix symbol, @samp{[]}.  The built-in variable
+@code{print_empty_dimensions} controls this behavior.
+
+@c print_empty_dimensions libinterp/corefcn/pr-output.cc
+@anchor{XREFprint_empty_dimensions}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{val} =} print_empty_dimensions ()
+@deftypefnx {} {@var{old_val} =} print_empty_dimensions (@var{new_val})
+@deftypefnx {} {@var{old_val} =} print_empty_dimensions (@var{new_val}, "local")
+Query or set the internal variable that controls whether the dimensions of
+empty matrices are printed along with the empty matrix symbol, @samp{[]}.
+
+For example, the expression
+
+@example
+zeros (3, 0)
+@end example
+
+@noindent
+will print
+
+@example
+ans = [](3x0)
+@end example
+
+When called from inside a function with the @qcode{"local"} option, the
+variable is changed locally for the function and any subroutines it calls.
+The original variable value is restored when exiting the function.
+@xseealso{@ref{XREFformat,,format}}
+@end deftypefn
+
+
+Empty matrices may also be used in assignment statements as a convenient
+way to delete rows or columns of matrices.
+@xref{Assignment Ops,,Assignment Expressions}.
+
+When Octave parses a matrix expression, it examines the elements of the
+list to determine whether they are all constants.  If they are, it
+replaces the list with a single matrix constant.
+
+@node Ranges
+@section Ranges
+@cindex range expressions
+@cindex expression, range
+
+@opindex :, range expressions
+
+A @dfn{range} is a convenient way to write a row vector with evenly
+spaced elements.  A range expression is defined by the value of the first
+element in the range, an optional value for the increment between
+elements, and a maximum value which the elements of the range will not
+exceed.  The base, increment, and limit are separated by colons (the
+@samp{:} character) and may contain any arithmetic expressions and
+function calls.  If the increment is omitted, it is assumed to be 1.
+For example, the range
+
+@example
+1 : 5
+@end example
+
+@noindent
+defines the set of values @code{[ 1, 2, 3, 4, 5 ]}, and the range
+
+@example
+1 : 3 : 5
+@end example
+
+@noindent
+defines the set of values @code{[ 1, 4 ]}.
+
+Although a range constant specifies a row vector, Octave does @emph{not}
+normally convert range constants to vectors unless it is necessary to do so.
+This allows you to write a constant like @code{1 : 10000} without using
+80,000 bytes of storage on a typical workstation.
+
+A common example of when it does become necessary to convert ranges into
+vectors occurs when they appear within a vector (i.e., inside square
+brackets).  For instance, whereas
+
+@example
+x = 0 : 0.1 : 1;
+@end example
+
+@noindent
+defines @var{x} to be a variable of type @code{double_range} and occupies 24
+bytes of memory, the expression
+
+@example
+y = [ 0 : 0.1 : 1];
+@end example
+
+@noindent
+defines @var{y} to be of type @code{matrix} and occupies 88 bytes of
+memory.
+
+This space saving optimization may be disabled using the function
+@code{optimize_range}.
+
+@c optimize_range libinterp/octave-value/ov.cc
+@anchor{XREFoptimize_range}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{val} =} optimize_range ()
+@deftypefnx {} {@var{old_val} =} optimize_range (@var{new_val})
+@deftypefnx {} {@var{old_val} =} optimize_range (@var{new_val}, "local")
+Query or set whether a special space-efficient format is used for storing
+ranges.
+
+The default value is true.  If this option is set to false, Octave will store
+ranges as full matrices.
+
+When called from inside a function with the @qcode{"local"} option, the setting
+is changed locally for the function and any subroutines it calls.  The original
+setting is restored when exiting the function.
+@xseealso{@ref{XREFoptimize_diagonal_matrix,,optimize_diagonal_matrix}, @ref{XREFoptimize_permutation_matrix,,optimize_permutation_matrix}}
+@end deftypefn
+
+
+Note that the upper (or lower, if the increment is negative) bound on
+the range is not always included in the set of values.  This can be useful
+in some contexts.  For example:
+
+@example
+@group
+## x is some predefined range or vector or matrix or array
+x(1:2:end) += 1;   # increment all  odd-numbered elements
+x(2:2:end) -= 1;   # decrement all even-numbered elements
+@end group
+@end example
+
+The above code works correctly whether @var{x} has an odd number of elements
+or not: there is no need to treat the two cases differently.
+
+Octave uses floating point arithmetic to compute the values in the
+range.  As a result, defining ranges with floating-point values can result
+in pitfalls like these:
+
+@example
+@group
+a = -2
+b = (0.3 - 0.2 - 0.1)
+x = a : b
+@end group
+@end example
+
+Due to floating point rounding, @var{b} may or may not equal zero exactly,
+and if it does not, it may be above zero or below zero, hence the final range
+@var{x} may or may not include zero as its final value.  Similarly:
+
+@example
+@group
+x = 1.80 : 0.05 : 1.90
+y = 1.85 : 0.05 : 1.90
+@end group
+@end example
+
+@noindent
+is not as predictable as it looks.  As of Octave 8.3, the results obtained are
+that @var{x} has three elements (1.80, 1.85, and 1.90), and @var{y} has only
+one element (1.85 but not 1.90).  Thus, when using floating points in ranges,
+changing the start of the range can easily affect the end of the range even
+though the ending value was not touched in the above example.
+
+To avoid such pitfalls with floating-points in ranges, you can use one of
+the following patterns.  This change to the previous code:
+
+@example
+@group
+x = (0:2) * 0.05 + 1.80
+y = (0:1) * 0.05 + 1.85
+@end group
+@end example
+
+@noindent
+use integers to construct the range and then converts to floating point making
+the overall expression safe and repeatable across platforms, compilers, and
+compiler settings.  If you know the number of elements, you can use the
+@code{linspace} function (@pxref{Special Utility Matrices}), which will include
+the endpoints of a range.  You can also make judicious use of @code{round},
+@code{floor}, @code{ceil}, @code{fix}, etc.@: to set the limits and the
+increment without getting interference from floating-point rounding.  For
+example, the earlier example can be made safer with one of the following:
+
+@example
+@group
+a = -2
+b = round ((0.3 - 0.2 - 0.1) * 1e12) / 1e12   # rounds to 12 digits
+c = floor (0.3 - 0.2 - 0.1)                   # floors as integer
+d = floor ((0.3 - 0.2 - 0.1) * 1e12) / 1e12   # floors at 12 digits
+x = a : b
+y = a : c
+z = a : d
+@end group
+@end example
+
+If the result of the range expression is empty then Octave returns an empty
+@code{matrix}, not an empty @code{double_range}.  Similarly, if there is just
+a single element in the range then Octave returns a @code{scalar}, not a
+@code{double_range} with one element.
+
+@node Single Precision Data Types
+@section Single Precision Data Types
+
+Octave includes support for single precision data types, and most of the
+functions in Octave accept single precision values and return single
+precision answers.  A single precision variable is created with the
+@code{single} function.
+
+@c single libinterp/octave-value/ov.cc
+@anchor{XREFsingle}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{y} =} single (@var{x})
+Convert @var{x} to single precision type.
+@xseealso{@ref{XREFdouble,,double}}
+@end deftypefn
+
+
+for example:
+
+@example
+@group
+sngl = single (rand (2, 2))
+     @xresult{} sngl =
+        0.37569   0.92982
+        0.11962   0.50876
+class (sngl)
+    @xresult{} single
+@end group
+@end example
+
+Many functions can also return single precision values directly.  For
+example
+
+@example
+@group
+ones (2, 2, "single")
+zeros (2, 2, "single")
+eye (2, 2,  "single")
+rand (2, 2, "single")
+NaN (2, 2, "single")
+NA (2, 2, "single")
+Inf (2, 2, "single")
+@end group
+@end example
+
+@noindent
+will all return single precision matrices.
+
+@node Integer Data Types
+@section Integer Data Types
+
+Octave supports integer matrices as an alternative to using double precision.
+It is possible to use both signed and unsigned integers represented by 8, 16,
+32, or 64 bits.  It should be noted that most computations require floating
+point data, meaning that integers will often change type when involved in
+numeric computations.  For this reason integers are most often used to store
+data, and not for calculations.
+
+In general, most integer matrices are created by casting existing matrices to
+integers.  The following example shows how to cast a matrix into 32-bit
+integers.
+
+@example
+@group
+float = rand (2, 2)
+     @xresult{} float = 0.37569   0.92982
+                0.11962   0.50876
+integer = int32 (float)
+     @xresult{} integer = 0  1
+                  0  1
+@end group
+@end example
+
+@noindent
+As can be seen, floating point values are rounded to the nearest integer when
+converted.
+
+@c isinteger libinterp/corefcn/data.cc
+@anchor{XREFisinteger}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} isinteger (@var{x})
+Return true if @var{x} is an integer object (int8, uint8, int16, etc.).
+
+Note that @w{@code{isinteger (14)}}@ is false because numeric constants in
+Octave are double precision floating point values.
+@xseealso{@ref{XREFisfloat,,isfloat}, @ref{XREFischar,,ischar}, @ref{XREFislogical,,islogical}, @ref{XREFisstring,,isstring}, @ref{XREFisnumeric,,isnumeric}, @ref{XREFisa,,isa}}
+@end deftypefn
+
+
+@c int8 libinterp/octave-value/ov.cc
+@anchor{XREFint8}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{y} =} int8 (@var{x})
+Convert @var{x} to 8-bit integer type.
+@xseealso{@ref{XREFuint8,,uint8}, @ref{XREFint16,,int16}, @ref{XREFuint16,,uint16}, @ref{XREFint32,,int32}, @ref{XREFuint32,,uint32}, @ref{XREFint64,,int64}, @ref{XREFuint64,,uint64}}
+@end deftypefn
+
+
+@c uint8 libinterp/octave-value/ov.cc
+@anchor{XREFuint8}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{y} =} uint8 (@var{x})
+Convert @var{x} to unsigned 8-bit integer type.
+@xseealso{@ref{XREFint8,,int8}, @ref{XREFint16,,int16}, @ref{XREFuint16,,uint16}, @ref{XREFint32,,int32}, @ref{XREFuint32,,uint32}, @ref{XREFint64,,int64}, @ref{XREFuint64,,uint64}}
+@end deftypefn
+
+
+@c int16 libinterp/octave-value/ov.cc
+@anchor{XREFint16}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{y} =} int16 (@var{x})
+Convert @var{x} to 16-bit integer type.
+@xseealso{@ref{XREFint8,,int8}, @ref{XREFuint8,,uint8}, @ref{XREFuint16,,uint16}, @ref{XREFint32,,int32}, @ref{XREFuint32,,uint32}, @ref{XREFint64,,int64}, @ref{XREFuint64,,uint64}}
+@end deftypefn
+
+
+@c uint16 libinterp/octave-value/ov.cc
+@anchor{XREFuint16}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{y} =} uint16 (@var{x})
+Convert @var{x} to unsigned 16-bit integer type.
+@xseealso{@ref{XREFint8,,int8}, @ref{XREFuint8,,uint8}, @ref{XREFint16,,int16}, @ref{XREFint32,,int32}, @ref{XREFuint32,,uint32}, @ref{XREFint64,,int64}, @ref{XREFuint64,,uint64}}
+@end deftypefn
+
+
+@c int32 libinterp/octave-value/ov.cc
+@anchor{XREFint32}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{y} =} int32 (@var{x})
+Convert @var{x} to 32-bit integer type.
+@xseealso{@ref{XREFint8,,int8}, @ref{XREFuint8,,uint8}, @ref{XREFint16,,int16}, @ref{XREFuint16,,uint16}, @ref{XREFuint32,,uint32}, @ref{XREFint64,,int64}, @ref{XREFuint64,,uint64}}
+@end deftypefn
+
+
+@c uint32 libinterp/octave-value/ov.cc
+@anchor{XREFuint32}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{y} =} uint32 (@var{x})
+Convert @var{x} to unsigned 32-bit integer type.
+@xseealso{@ref{XREFint8,,int8}, @ref{XREFuint8,,uint8}, @ref{XREFint16,,int16}, @ref{XREFuint16,,uint16}, @ref{XREFint32,,int32}, @ref{XREFint64,,int64}, @ref{XREFuint64,,uint64}}
+@end deftypefn
+
+
+@c int64 libinterp/octave-value/ov.cc
+@anchor{XREFint64}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{y} =} int64 (@var{x})
+Convert @var{x} to 64-bit integer type.
+@xseealso{@ref{XREFint8,,int8}, @ref{XREFuint8,,uint8}, @ref{XREFint16,,int16}, @ref{XREFuint16,,uint16}, @ref{XREFint32,,int32}, @ref{XREFuint32,,uint32}, @ref{XREFuint64,,uint64}}
+@end deftypefn
+
+
+@c uint64 libinterp/octave-value/ov.cc
+@anchor{XREFuint64}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{y} =} uint64 (@var{x})
+Convert @var{x} to unsigned 64-bit integer type.
+@xseealso{@ref{XREFint8,,int8}, @ref{XREFuint8,,uint8}, @ref{XREFint16,,int16}, @ref{XREFuint16,,uint16}, @ref{XREFint32,,int32}, @ref{XREFuint32,,uint32}, @ref{XREFint64,,int64}}
+@end deftypefn
+
+
+@c intmax libinterp/corefcn/bitfcns.cc
+@anchor{XREFintmax}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{Imax} =} intmax ()
+@deftypefnx {} {@var{Imax} =} intmax ("@var{type}")
+@deftypefnx {} {@var{Imax} =} intmax (@var{var})
+Return the largest integer that can be represented by a specific integer type.
+
+The input is either a string @qcode{"@var{type}"} specifying an integer type,
+or it is an existing integer variable @var{var}.
+
+Possible values for @var{type} are
+
+@table @asis
+@item @qcode{"int8"}
+signed 8-bit integer.
+
+@item @qcode{"int16"}
+signed 16-bit integer.
+
+@item @qcode{"int32"}
+signed 32-bit integer.
+
+@item @qcode{"int64"}
+signed 64-bit integer.
+
+@item @qcode{"uint8"}
+unsigned 8-bit integer.
+
+@item @qcode{"uint16"}
+unsigned 16-bit integer.
+
+@item @qcode{"uint32"}
+unsigned 32-bit integer.
+
+@item @qcode{"uint64"}
+unsigned 64-bit integer.
+@end table
+
+The default for @var{type} is @qcode{"int32"}.
+
+Example Code - query an existing variable
+
+@example
+@group
+x = int8 (1);
+intmax (x)
+  @xresult{} 127
+@end group
+@end example
+
+@xseealso{@ref{XREFintmin,,intmin}, @ref{XREFflintmax,,flintmax}}
+@end deftypefn
+
+
+@c intmin libinterp/corefcn/bitfcns.cc
+@anchor{XREFintmin}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{Imin} =} intmin ()
+@deftypefnx {} {@var{Imin} =} intmin ("@var{type}")
+@deftypefnx {} {@var{Imin} =} intmin (@var{var})
+Return the smallest integer that can be represented by a specific integer type.
+
+The input is either a string @qcode{"@var{type}"} specifying an integer type,
+or it is an existing integer variable @var{var}.
+
+Possible values for @var{type} are
+
+@table @asis
+@item @qcode{"int8"}
+signed 8-bit integer.
+
+@item @qcode{"int16"}
+signed 16-bit integer.
+
+@item @qcode{"int32"}
+signed 32-bit integer.
+
+@item @qcode{"int64"}
+signed 64-bit integer.
+
+@item @qcode{"uint8"}
+unsigned 8-bit integer.
+
+@item @qcode{"uint16"}
+unsigned 16-bit integer.
+
+@item @qcode{"uint32"}
+unsigned 32-bit integer.
+
+@item @qcode{"uint64"}
+unsigned 64-bit integer.
+@end table
+
+The default for @var{type} is @qcode{"int32"}.
+
+Example Code - query an existing variable
+
+@example
+@group
+x = int8 (1);
+intmin (x)
+  @xresult{} -128
+@end group
+@end example
+
+@xseealso{@ref{XREFintmax,,intmax}, @ref{XREFflintmax,,flintmax}}
+@end deftypefn
+
+
+@c flintmax libinterp/corefcn/bitfcns.cc
+@anchor{XREFflintmax}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{Imax} =} flintmax ()
+@deftypefnx {} {@var{Imax} =} flintmax ("double")
+@deftypefnx {} {@var{Imax} =} flintmax ("single")
+@deftypefnx {} {@var{Imax} =} flintmax (@var{var})
+Return the largest integer that can be represented consecutively in a
+floating point value.
+
+The input is either a string specifying a floating point type, or it is an
+existing floating point variable @var{var}.
+
+The default type is @qcode{"double"}, but @qcode{"single"} is a valid option.
+On IEEE@tie{}754 compatible systems, @code{flintmax} is @w{@math{2^{53}}}@ for
+@qcode{"double"} and @w{@math{2^{24}}}@ for @qcode{"single"}.
+
+Example Code - query an existing variable
+
+@example
+@group
+x = single (1);
+flintmax (x)
+  @xresult{} 16777216
+@end group
+@end example
+
+@xseealso{@ref{XREFintmax,,intmax}, @ref{XREFrealmax,,realmax}, @ref{XREFrealmin,,realmin}}
+@end deftypefn
+
+
+@menu
+* Hexadecimal and Binary Integer Constants::
+* Integer Arithmetic::
+@end menu
+
+@node Hexadecimal and Binary Integer Constants
+@subsection Hexadecimal and Binary Integer Constants
+
+The use of hexadecimal or binary notation to define a number will automatically
+create an unsigned integer using a representation that is just large enough to
+hold the specified value.  For example:
+
+@example
+@group
+0b101        # uint8
+0x100        # uint16
+0xDEADBEEF   # uint32
+0x1DEADBEEF  # uint64
+@end group
+@end example
+
+The storage class can be specified by adding a suffix.  Use @samp{s} for signed
+integers and @samp{u} for unsigned integers along with a size (@samp{8},
+@samp{16}, @samp{32}, @samp{64}).  The use of the underscore separator @samp{_}
+can improve readability.  For example:
+
+@example
+@group
+0b101s16        # int16
+0b101_s16       # int16, value and representation separated
+0xDEADBEEFs32   # int32
+0xDEADBEEF_u64  # uint64
+@end group
+@end example
+
+Note that when defining matrices of integer constants the overall matrix will
+have the storage class of its first element.  The matrix
+@code{[0x1; 0x100; 0x10000]} will be of type @code{uint8} and the larger values
+will be truncated because of the saturation semantics of integer values.  To
+avoid this issue either: 1) declare the first integer to be of the desired size
+such as @code{0x1u32; 0x100; 0x10000]}, or 2) pad constants in array
+expressions with leading zeros so that they use the same number of digits for
+each value such as @code{[0x00_00_01; 0x00_01_00; 0x01_00_00]}.
+
+@node Integer Arithmetic
+@subsection Integer Arithmetic
+
+While many numerical computations can't be carried out in integers,
+Octave does support basic operations like addition and multiplication
+on integers.  The operators @code{+}, @code{-}, @code{.*}, and @code{./}
+work on integers of the same type.  So, it is possible to add two 32-bit
+integers, but not to add a 32-bit integer and a 16-bit integer.
+
+When doing integer arithmetic one should consider the possibility of
+underflow and overflow.  This happens when the result of the computation
+can't be represented using the chosen integer type.  As an example it is
+not possible to represent the result of @math{10 - 20} when using
+unsigned integers.  Octave makes sure that the result of integer
+computations is the integer that is closest to the true result.  So, the
+result of @math{10 - 20} when using unsigned integers is zero.
+
+When doing integer division Octave will round the result to the nearest
+integer.  This is different from most programming languages, where the
+result is often floored to the nearest integer.  So, the result of
+@code{int32 (5) ./ int32 (8)} is @code{1}.
+
+@c idivide scripts/general/idivide.m
+@anchor{XREFidivide}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{C} =} idivide (@var{A}, @var{B}, @var{op})
+Integer division with different rounding rules.
+
+The standard behavior of integer division such as @code{@var{A} ./ @var{B}}
+is to round the result to the nearest integer.  This is not always the
+desired behavior and @code{idivide} permits integer element-by-element
+division to be performed with different treatment for the fractional
+part of the division as determined by the @var{op} flag.  @var{op} is
+a string with one of the values:
+
+@table @asis
+@item @qcode{"fix"}
+Calculate @code{@var{A} ./ @var{B}} with the fractional part rounded
+towards zero.
+
+@item @qcode{"round"}
+Calculate @code{@var{A} ./ @var{B}} with the fractional part rounded
+towards the nearest integer.
+
+@item @qcode{"floor"}
+Calculate @code{@var{A} ./ @var{B}} with the fractional part rounded
+towards negative infinity.
+
+@item @qcode{"ceil"}
+Calculate @code{@var{A} ./ @var{B}} with the fractional part rounded
+towards positive infinity.
+@end table
+
+@noindent
+If @var{op} is not given it defaults to @qcode{"fix"}.
+An example demonstrating these rounding rules is
+
+@example
+@group
+idivide (int8 ([-3, 3]), int8 (4), "fix")
+  @xresult{}   0   0
+idivide (int8 ([-3, 3]), int8 (4), "round")
+  @xresult{}  -1   1
+idivide (int8 ([-3, 3]), int8 (4), "floor")
+  @xresult{}  -1   0
+idivide (int8 ([-3, 3]), int8 (4), "ceil")
+  @xresult{}   0   1
+@end group
+@end example
+
+@xseealso{@ref{XREFceil,,ceil}, @ref{XREFfloor,,floor}, @ref{XREFfix,,fix}, @ref{XREFround,,round}, @ref{XREFldivide,,ldivide}, @ref{XREFrdivide,,rdivide}}
+@end deftypefn
+
+
+@node Bit Manipulations
+@section Bit Manipulations
+
+Octave provides a number of functions for the manipulation of numeric
+values on a bit by bit basis.  The basic functions to set and obtain the
+values of individual bits are @code{bitset} and @code{bitget}.
+
+@c bitset scripts/general/bitset.m
+@anchor{XREFbitset}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{B} =} bitset (@var{A}, @var{n})
+@deftypefnx {} {@var{B} =} bitset (@var{A}, @var{n}, @var{val})
+Set or reset bit(s) at position @var{n} of the unsigned integers in @var{A}.
+
+The least significant bit is @var{n} = 1.  @w{@var{val} = 0}@ resets bits
+and @w{@var{val} = 1}@ sets bits.  If no @var{val} is specified it
+defaults to 1 (set bit).  All inputs must be the same size or scalars.
+
+Example 1: Set multiple bits
+
+@example
+@group
+x = bitset (1, 3:5)
+  @xresult{} x =
+
+   5    9   17
+
+dec2bin (x)
+  @xresult{}
+     00101
+     01001
+     10001
+@end group
+@end example
+
+Example 2: Reset and set bits
+
+@example
+@group
+x = bitset ([15 14], 1, [0 1])
+  @xresult{} x =
+
+   14    15
+@end group
+@end example
+@xseealso{@ref{XREFbitand,,bitand}, @ref{XREFbitor,,bitor}, @ref{XREFbitxor,,bitxor}, @ref{XREFbitget,,bitget}, @ref{XREFbitcmp,,bitcmp}, @ref{XREFbitshift,,bitshift}, @ref{XREFintmax,,intmax}, @ref{XREFflintmax,,flintmax}}
+@end deftypefn
+
+
+@c bitget scripts/general/bitget.m
+@anchor{XREFbitget}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{b} =} bitget (@var{A}, @var{n})
+Return the bit value at position(s) @var{n} of the unsigned integers in
+@var{A}.
+
+The least significant bit is @var{n} = 1.
+
+@example
+@group
+bitget (100, 8:-1:1)
+@xresult{} 0  1  1  0  0  1  0  0
+@end group
+@end example
+@xseealso{@ref{XREFbitand,,bitand}, @ref{XREFbitor,,bitor}, @ref{XREFbitxor,,bitxor}, @ref{XREFbitset,,bitset}, @ref{XREFbitcmp,,bitcmp}, @ref{XREFbitshift,,bitshift}, @ref{XREFintmax,,intmax}, @ref{XREFflintmax,,flintmax}}
+@end deftypefn
+
+
+The arguments to all of Octave's bitwise operations can be scalar or
+arrays, except for @code{bitcmp}, whose @var{k} argument must a
+scalar.  In the case where more than one argument is an array, then all
+arguments must have the same shape, and the bitwise operator is applied
+to each of the elements of the argument individually.  If at least one
+argument is a scalar and one an array, then the scalar argument is
+duplicated.  Therefore
+
+@example
+bitget (100, 8:-1:1)
+@end example
+
+@noindent
+is the same as
+
+@example
+bitget (100 * ones (1, 8), 8:-1:1)
+@end example
+
+It should be noted that all values passed to the bit manipulation
+functions of Octave are treated as integers.  Therefore, even though the
+example for @code{bitset} above passes the floating point value
+@code{10}, it is treated as the bits @code{[1, 0, 1, 0]} rather than the
+bits of the native floating point format representation of @code{10}.
+
+As the maximum value that can be represented by a number is important
+for bit manipulation, particularly when forming masks, Octave supplies
+two utility functions: @code{flintmax} for floating point integers, and
+@code{intmax} for integer objects (@code{uint8}, @code{int64}, etc.).
+
+Octave also includes the basic bitwise 'and', 'or', and 'exclusive or'
+operators.
+
+@c bitand libinterp/corefcn/bitfcns.cc
+@anchor{XREFbitand}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{z} =} bitand (@var{x}, @var{y})
+Return the bitwise AND of non-negative integers.
+
+@var{x}, @var{y} must be in the range [0,intmax]
+@xseealso{@ref{XREFbitor,,bitor}, @ref{XREFbitxor,,bitxor}, @ref{XREFbitset,,bitset}, @ref{XREFbitget,,bitget}, @ref{XREFbitcmp,,bitcmp}, @ref{XREFbitshift,,bitshift}, @ref{XREFintmax,,intmax}, @ref{XREFflintmax,,flintmax}}
+@end deftypefn
+
+
+@c bitor libinterp/corefcn/bitfcns.cc
+@anchor{XREFbitor}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{z} =} bitor (@var{x}, @var{y})
+Return the bitwise OR of non-negative integers @var{x} and @var{y}.
+
+@xseealso{@ref{XREFbitor,,bitor}, @ref{XREFbitxor,,bitxor}, @ref{XREFbitset,,bitset}, @ref{XREFbitget,,bitget}, @ref{XREFbitcmp,,bitcmp}, @ref{XREFbitshift,,bitshift}, @ref{XREFintmax,,intmax}, @ref{XREFflintmax,,flintmax}}
+@end deftypefn
+
+
+@c bitxor libinterp/corefcn/bitfcns.cc
+@anchor{XREFbitxor}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{z} =} bitxor (@var{x}, @var{y})
+Return the bitwise XOR of non-negative integers @var{x} and @var{y}.
+
+@xseealso{@ref{XREFbitand,,bitand}, @ref{XREFbitor,,bitor}, @ref{XREFbitset,,bitset}, @ref{XREFbitget,,bitget}, @ref{XREFbitcmp,,bitcmp}, @ref{XREFbitshift,,bitshift}, @ref{XREFintmax,,intmax}, @ref{XREFflintmax,,flintmax}}
+@end deftypefn
+
+
+The bitwise 'not' operator is a unary operator that performs a logical
+negation of each of the bits of the value.  For this to make sense, the
+mask against which the value is negated must be defined.  Octave's
+bitwise 'not' operator is @code{bitcmp}.
+
+@c bitcmp scripts/general/bitcmp.m
+@anchor{XREFbitcmp}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{C} =} bitcmp (@var{A}, @var{k})
+Return the @var{k}-bit complement of integers in @var{A}.
+
+If @var{k} is omitted @code{k = log2 (flintmax) + 1} is assumed.
+
+@example
+@group
+bitcmp (7,4)
+  @xresult{} 8
+dec2bin (11)
+  @xresult{} 1011
+dec2bin (bitcmp (11, 6))
+  @xresult{} 110100
+@end group
+@end example
+
+@xseealso{@ref{XREFbitand,,bitand}, @ref{XREFbitor,,bitor}, @ref{XREFbitxor,,bitxor}, @ref{XREFbitset,,bitset}, @ref{XREFbitget,,bitget}, @ref{XREFbitcmp,,bitcmp}, @ref{XREFbitshift,,bitshift}, @ref{XREFflintmax,,flintmax}}
+@end deftypefn
+
+
+Octave also includes the ability to left-shift and right-shift values bitwise.
+
+@c bitshift libinterp/corefcn/bitfcns.cc
+@anchor{XREFbitshift}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{B} =} bitshift (@var{A}, @var{k})
+@deftypefnx {} {@var{B} =} bitshift (@var{A}, @var{k}, @var{n})
+Return a @var{k} bit shift of @var{n}-digit unsigned integers in @var{A}.
+
+A positive @var{k} leads to a left shift; A negative value to a right shift.
+
+If @var{n} is omitted it defaults to 64.  @var{n} must be in the range [1,64].
+
+@example
+@group
+bitshift (eye (3), 1)
+@xresult{}
+@group
+2 0 0
+0 2 0
+0 0 2
+@end group
+
+bitshift (10, [-2, -1, 0, 1, 2])
+@xresult{} 2   5  10  20  40
+@c FIXME: restore this example when third arg is allowed to be an array.
+@c
+@c
+@c bitshift ([1, 10], 2, [3,4])
+@c @xresult{} 4  8
+@end group
+@end example
+@xseealso{@ref{XREFbitand,,bitand}, @ref{XREFbitor,,bitor}, @ref{XREFbitxor,,bitxor}, @ref{XREFbitset,,bitset}, @ref{XREFbitget,,bitget}, @ref{XREFbitcmp,,bitcmp}, @ref{XREFintmax,,intmax}, @ref{XREFflintmax,,flintmax}}
+@end deftypefn
+
+
+Bits that are shifted out of either end of the value are lost.  Octave
+also uses arithmetic shifts, where the sign bit of the value is kept
+during a right shift.  For example:
+
+@example
+@group
+bitshift (-10, -1)
+@xresult{} -5
+bitshift (int8 (-1), -1)
+@xresult{} -1
+@end group
+@end example
+
+Note that @code{bitshift (int8 (-1), -1)} is @code{-1} since the bit
+representation of @code{-1} in the @code{int8} data type is @code{[1, 1,
+1, 1, 1, 1, 1, 1]}.
+
+@node Logical Values
+@section Logical Values
+
+Octave has built-in support for logical values, i.e., variables that
+are either @code{true} or @code{false}.  When comparing two variables,
+the result will be a logical value whose value depends on whether or
+not the comparison is true.
+
+The basic logical operations are @code{&}, @code{|}, and @code{!},
+which correspond to ``Logical And'', ``Logical Or'', and ``Logical
+Negation''.  These operations all follow the usual rules of logic.
+
+It is also possible to use logical values as part of standard numerical
+calculations.  In this case @code{true} is converted to @code{1}, and
+@code{false} to 0, both represented using double precision floating
+point numbers.  So, the result of @code{true*22 - false/6} is @code{22}.
+
+Logical values can also be used to index matrices and cell arrays.
+When indexing with a logical array the result will be a vector containing
+the values corresponding to @code{true} parts of the logical array.
+@xref{XREFLogicalIndexing,,Logical Indexing}.
+
+Logical values can also be constructed by
+casting numeric objects to logical values, or by using the @code{true}
+or @code{false} functions.
+
+@c logical libinterp/octave-value/ov-bool-mat.cc
+@anchor{XREFlogical}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{TF} =} logical (@var{x})
+Convert the numeric object @var{x} to logical type.
+
+Any nonzero values will be converted to true (1) while zero values will be
+converted to false (0).  The non-numeric value NaN cannot be converted and will
+produce an error.
+
+Compatibility Note: Octave accepts complex values as input, whereas @sc{matlab}
+issues an error.
+@xseealso{@ref{XREFdouble,,double}, @ref{XREFsingle,,single}, @ref{XREFchar,,char}}
+@end deftypefn
+
+
+@c true libinterp/corefcn/data.cc
+@anchor{XREFtrue}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{T} =} true
+@deftypefnx {} {@var{T} =} true (@var{n})
+@deftypefnx {} {@var{T} =} true (@var{m}, @var{n}, @dots{})
+@deftypefnx {} {@var{T} =} true ([@var{m}, @var{n}, @dots{}])
+@deftypefnx {} {@var{T} =} true (@dots{}, "like", @var{var})
+Return a scalar, matrix, or N-dimensional array whose elements are all logical
+@code{1}.
+
+If called with no arguments, return the scalar value logical @code{1}.
+
+If invoked with a single scalar integer argument @var{n}, return a square
+@nospell{NxN} matrix.
+
+If invoked with two or more scalar integer arguments, or a vector of integer
+values, return an array with the given dimensions.
+
+If a logical variable @var{var} is specified after @qcode{"like"}, the output
+@var{T} will have the same sparsity as @var{var}.
+
+Programming Notes: The code @code{true (@dots{})} is faster (30X) and more
+memory efficient than @code{logical (ones (@dots{}))}.
+
+Any negative dimensions are treated as zero, and any zero dimensions will
+result in an empty matrix.  This odd behavior is for @sc{matlab} compatibility.
+@xseealso{@ref{XREFfalse,,false}, @ref{XREFlogical,,logical}, @ref{XREFones,,ones}, @ref{XREFzeros,,zeros}}
+@end deftypefn
+
+
+@c false libinterp/corefcn/data.cc
+@anchor{XREFfalse}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{F} =} false
+@deftypefnx {} {@var{F} =} false (@var{n})
+@deftypefnx {} {@var{F} =} false (@var{m}, @var{n}, @dots{})
+@deftypefnx {} {@var{F} =} false ([@var{m}, @var{n}, @dots{}])
+@deftypefnx {} {@var{F} =} false (@dots{}, "like", @var{var})
+Return a scalar, matrix, or N-dimensional array whose elements are all logical
+@code{0}.
+
+If called with no arguments, return the scalar value logical @code{0}.
+
+If invoked with a single scalar integer argument @var{n}, return a square
+@nospell{NxN} matrix.
+
+If invoked with two or more scalar integer arguments, or a vector of integer
+values, return an array with the given dimensions.
+
+If a logical variable @var{var} is specified after @qcode{"like"}, the output
+@var{F} will have the same sparsity as @var{var}.
+
+Programming Note: The code @code{false (@dots{})} is faster (30X) and more
+memory efficient than @code{logical (zeros (@dots{}))}.
+
+Any negative dimensions are treated as zero, and any zero dimensions will
+result in an empty matrix.  This odd behavior is for @sc{matlab} compatibility.
+@xseealso{@ref{XREFtrue,,true}, @ref{XREFlogical,,logical}, @ref{XREFones,,ones}, @ref{XREFzeros,,zeros}}
+@end deftypefn
+
+
+@node Automatic Conversion of Data Types
+@section Automatic Conversion of Data Types
+
+Many operators and functions can work with mixed data types.  For example,
+
+@example
+@group
+uint8 (1) + 1
+    @xresult{} 2
+@end group
+
+@group
+single (1) + 1
+    @xresult{} 2
+@end group
+
+@group
+min (single (1), 0)
+   @xresult{} 0
+@end group
+@end example
+
+@noindent
+where the results are respectively of types uint8, single, and single
+respectively.  This is done for @sc{matlab} compatibility.  Valid mixed
+operations are defined as follows:
+
+@multitable @columnfractions .2 .3 .3 .2
+@headitem @tab Mixed Operation @tab Result @tab
+@item @tab double OP single @tab single @tab
+@item @tab double OP integer @tab integer @tab
+@item @tab double OP char @tab double @tab
+@item @tab double OP logical @tab double @tab
+@item @tab single OP integer @tab integer @tab
+@item @tab single OP char @tab single @tab
+@item @tab single OP logical @tab single @tab
+@end multitable
+
+When functions expect a double but are passed other types, automatic
+conversion is function-dependent:
+
+@example
+@group
+a = det (int8 ([1 2; 3 4]))
+    @xresult{} a = -2
+class (a)
+    @xresult{} double
+@end group
+
+@group
+a = eig (int8 ([1 2; 3 4]))
+    @xresult{} error: eig: wrong type argument 'int8 matrix'
+@end group
+@end example
+
+When two operands are both integers but of different widths, then some cases
+convert them to the wider bitwidth, and other cases throw an error:
+
+@example
+@group
+a = min (int8 (100), int16 (200))
+    @xresult{} 100
+class (a)
+    @xresult{} int16
+@end group
+
+@group
+int8 (100) + int16 (200)
+   @xresult{} error: binary operator '+' not implemented
+   for 'int8 scalar' by 'int16 scalar' operations
+@end group
+@end example
+
+For two integer operands, they typically need to both be signed or both be
+unsigned.  Mixing signed and unsigned usually causes an error, even if they
+are of the same bitwidth.
+
+@example
+@group
+min (int16 (100), uint16 (200))
+   @xresult{} error: min: cannot compute min (int16 scalar, uint16 scalar)
+@end group
+@end example
+
+In the case of mixed type indexed assignments, the type is not
+changed.  For example,
+
+@example
+@group
+x = ones (2, 2);
+x(1, 1) = single (2)
+   @xresult{} x = 2   1
+          1   1
+@end group
+@end example
+
+@noindent
+where @code{x} remains of the double precision type.
+
+@node Predicates for Numeric Objects
+@section Predicates for Numeric Objects
+
+Since the type of a variable may change during the execution of a
+program, it can be necessary to do type checking at run-time.  Doing this
+also allows you to change the behavior of a function depending on the
+type of the input.  As an example, this naive implementation of @code{abs}
+returns the absolute value of the input if it is a real number, and the
+length of the input if it is a complex number.
+
+@example
+@group
+function a = abs (x)
+  if (isreal (x))
+    a = sign (x) .* x;
+  elseif (iscomplex (x))
+    a = sqrt (real(x).^2 + imag(x).^2);
+  endif
+endfunction
+@end group
+@end example
+
+The following functions are available for determining the type of a
+variable.
+
+@c isnumeric libinterp/corefcn/data.cc
+@anchor{XREFisnumeric}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} isnumeric (@var{x})
+Return true if @var{x} is a numeric object, i.e., an integer, real, or
+complex array.
+
+Logical and character arrays are not considered to be numeric.
+@xseealso{@ref{XREFisinteger,,isinteger}, @ref{XREFisfloat,,isfloat}, @ref{XREFisreal,,isreal}, @ref{XREFiscomplex,,iscomplex}, @ref{XREFischar,,ischar}, @ref{XREFislogical,,islogical}, @ref{XREFisstring,,isstring}, @ref{XREFiscell,,iscell}, @ref{XREFisstruct,,isstruct}, @ref{XREFisa,,isa}}
+@end deftypefn
+
+
+@c islogical libinterp/corefcn/data.cc
+@anchor{XREFislogical}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{tf} =} islogical (@var{x})
+@deftypefnx {} {@var{tf} =} isbool (@var{x})
+Return true if @var{x} is a logical object.
+
+Programming Note: @code{isbool} is an alias for @code{islogical} and can be
+used interchangeably.
+@xseealso{@ref{XREFischar,,ischar}, @ref{XREFisfloat,,isfloat}, @ref{XREFisinteger,,isinteger}, @ref{XREFisstring,,isstring}, @ref{XREFisnumeric,,isnumeric}, @ref{XREFisa,,isa}}
+@end deftypefn
+
+
+@c isfloat libinterp/corefcn/data.cc
+@anchor{XREFisfloat}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} isfloat (@var{x})
+Return true if @var{x} is a floating-point numeric object.
+
+Objects of class double or single are floating-point objects.
+@xseealso{@ref{XREFisinteger,,isinteger}, @ref{XREFischar,,ischar}, @ref{XREFislogical,,islogical}, @ref{XREFisnumeric,,isnumeric}, @ref{XREFisstring,,isstring}, @ref{XREFisa,,isa}}
+@end deftypefn
+
+
+@c isreal libinterp/corefcn/data.cc
+@anchor{XREFisreal}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} isreal (@var{x})
+Return true if @var{x} is a non-complex matrix or scalar.
+
+For compatibility with @sc{matlab}, this includes logical and character
+matrices.
+@xseealso{@ref{XREFiscomplex,,iscomplex}, @ref{XREFisnumeric,,isnumeric}, @ref{XREFisa,,isa}}
+@end deftypefn
+
+
+@c iscomplex libinterp/corefcn/data.cc
+@anchor{XREFiscomplex}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} iscomplex (@var{x})
+Return true if @var{x} is a complex-valued numeric object.
+@xseealso{@ref{XREFisreal,,isreal}, @ref{XREFisnumeric,,isnumeric}, @ref{XREFischar,,ischar}, @ref{XREFisfloat,,isfloat}, @ref{XREFislogical,,islogical}, @ref{XREFisstring,,isstring}, @ref{XREFisa,,isa}}
+@end deftypefn
+
+
+@c ismatrix libinterp/corefcn/data.cc
+@anchor{XREFismatrix}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} ismatrix (@var{x})
+Return true if @var{x} is a 2-D array.
+
+A matrix is an array of any type where @code{ndims (@var{x}) == 2} and for
+which @code{size (@var{x})} returns @w{@code{[M, N]}}@ with non-negative M and
+N.
+@xseealso{@ref{XREFisscalar,,isscalar}, @ref{XREFisvector,,isvector}, @ref{XREFiscell,,iscell}, @ref{XREFisstruct,,isstruct}, @ref{XREFissparse,,issparse}, @ref{XREFisa,,isa}}
+@end deftypefn
+
+
+@c isvector libinterp/corefcn/data.cc
+@anchor{XREFisvector}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} isvector (@var{x})
+Return true if @var{x} is a vector.
+
+A vector is a 2-D array of any type where one of the dimensions is equal to 1
+(either @nospell{1xN} or @nospell{Nx1}).  As a consequence of this definition,
+a 1x1 object (a scalar) is also a vector.
+@xseealso{@ref{XREFisscalar,,isscalar}, @ref{XREFismatrix,,ismatrix}, @ref{XREFiscolumn,,iscolumn}, @ref{XREFisrow,,isrow}, @ref{XREFsize,,size}}
+@end deftypefn
+
+
+@c isrow libinterp/corefcn/data.cc
+@anchor{XREFisrow}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} isrow (@var{x})
+Return true if @var{x} is a row vector.
+
+A row vector is a 2-D array of any type for which @code{size (@var{x})} returns
+@w{@code{[1, N]}}@ with non-negative N.
+@xseealso{@ref{XREFiscolumn,,iscolumn}, @ref{XREFisscalar,,isscalar}, @ref{XREFisvector,,isvector}, @ref{XREFismatrix,,ismatrix}, @ref{XREFsize,,size}}
+@end deftypefn
+
+
+@c iscolumn libinterp/corefcn/data.cc
+@anchor{XREFiscolumn}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} iscolumn (@var{x})
+Return true if @var{x} is a column vector.
+
+A column vector is a 2-D array of any type for which @code{size (@var{x})}
+returns @w{@code{[N, 1]}}@ with non-negative N.
+@xseealso{@ref{XREFisrow,,isrow}, @ref{XREFisscalar,,isscalar}, @ref{XREFisvector,,isvector}, @ref{XREFismatrix,,ismatrix}, @ref{XREFsize,,size}}
+@end deftypefn
+
+
+@c isscalar libinterp/corefcn/data.cc
+@anchor{XREFisscalar}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} isscalar (@var{x})
+Return true if @var{x} is a scalar.
+
+A scalar is a single-element object of any type for which @code{size (@var{x})}
+returns @w{@code{[1, 1]}}.
+@xseealso{@ref{XREFisvector,,isvector}, @ref{XREFismatrix,,ismatrix}, @ref{XREFsize,,size}}
+@end deftypefn
+
+
+@c issquare libinterp/corefcn/data.cc
+@anchor{XREFissquare}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} issquare (@var{x})
+Return true if @var{x} is a 2-D square array.
+
+A square array is a 2-D array of any type for which @code{size (@var{x})}
+returns @w{@code{[N, N]}}@ where N is a non-negative integer.
+@xseealso{@ref{XREFisscalar,,isscalar}, @ref{XREFisvector,,isvector}, @ref{XREFismatrix,,ismatrix}, @ref{XREFsize,,size}}
+@end deftypefn
+
+
+@c issymmetric scripts/linear-algebra/issymmetric.m
+@anchor{XREFissymmetric}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{tf} =} issymmetric (@var{A})
+@deftypefnx {} {@var{tf} =} issymmetric (@var{A}, @var{tol})
+@deftypefnx {} {@var{tf} =} issymmetric (@var{A}, @qcode{"skew"})
+@deftypefnx {} {@var{tf} =} issymmetric (@var{A}, @qcode{"skew"}, @var{tol})
+Return true if @var{A} is a symmetric or skew-symmetric numeric matrix
+within the tolerance specified by @var{tol}.
+
+The default tolerance is zero (uses faster code).
+
+The type of symmetry to check may be specified with the additional input
+@qcode{"nonskew"} (default) for regular symmetry or @qcode{"skew"} for
+skew-symmetry.
+
+Background: A matrix is symmetric if the transpose of the matrix is equal
+to the original matrix: @w{@tcode{@var{A} == @var{A}.'}}.  If a tolerance
+is given then symmetry is determined by
+@code{norm (@var{A} - @var{A}.', Inf) / norm (@var{A}, Inf) < @var{tol}}.
+
+A matrix is skew-symmetric if the transpose of the matrix is equal to the
+negative of the original matrix: @w{@tcode{@var{A} == -@var{A}.'}}.  If a
+tolerance is given then skew-symmetry is determined by
+@code{norm (@var{A} + @var{A}.', Inf) / norm (@var{A}, Inf) < @var{tol}}.
+@xseealso{@ref{XREFishermitian,,ishermitian}, @ref{XREFisdefinite,,isdefinite}}
+@end deftypefn
+
+
+@c ishermitian scripts/linear-algebra/ishermitian.m
+@anchor{XREFishermitian}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{tf} =} ishermitian (@var{A})
+@deftypefnx {} {@var{tf} =} ishermitian (@var{A}, @var{tol})
+@deftypefnx {} {@var{tf} =} ishermitian (@var{A}, @qcode{"skew"})
+@deftypefnx {} {@var{tf} =} ishermitian (@var{A}, @qcode{"skew"}, @var{tol})
+Return true if @var{A} is a Hermitian or skew-Hermitian numeric matrix
+within the tolerance specified by @var{tol}.
+
+The default tolerance is zero (uses faster code).
+
+The type of symmetry to check may be specified with the additional input
+@qcode{"nonskew"} (default) for regular Hermitian or @qcode{"skew"} for
+skew-Hermitian.
+
+Background: A matrix is Hermitian if the complex conjugate transpose of the
+matrix is equal to the original matrix: @w{@tcode{@var{A} == @var{A}'}}.  If
+a tolerance is given then the calculation is
+@code{norm (@var{A} - @var{A}', Inf) / norm (@var{A}, Inf) < @var{tol}}.
+
+A matrix is skew-Hermitian if the complex conjugate transpose of the matrix
+is equal to the negative of the original matrix:
+@w{@tcode{@var{A} == -@var{A}'}}.  If a
+tolerance is given then the calculation is
+@code{norm (@var{A} + @var{A}', Inf) / norm (@var{A}, Inf) < @var{tol}}.
+@xseealso{@ref{XREFissymmetric,,issymmetric}, @ref{XREFisdefinite,,isdefinite}}
+@end deftypefn
+
+
+@c isdefinite scripts/linear-algebra/isdefinite.m
+@anchor{XREFisdefinite}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{tf} =} isdefinite (@var{A})
+@deftypefnx {} {@var{tf} =} isdefinite (@var{A}, @var{tol})
+Return true if @var{A} is symmetric positive definite numeric matrix within
+the tolerance specified by @var{tol}.
+
+If @var{tol} is omitted, use a tolerance of
+@code{100 * eps * norm (@var{A}, "fro")}.
+
+Background: A positive definite matrix has eigenvalues which are all
+greater than zero.  A positive semi-definite matrix has eigenvalues which
+are all greater than or equal to zero.  The matrix @var{A} is very likely to
+be positive semi-definite if the following two conditions hold for a
+suitably small tolerance @var{tol}.
+
+@example
+@group
+isdefinite (@var{A}) @xresult{} 0
+isdefinite (@var{A} + 5*@var{tol}, @var{tol}) @xresult{} 1
+@end group
+@end example
+@xseealso{@ref{XREFissymmetric,,issymmetric}, @ref{XREFishermitian,,ishermitian}}
+@end deftypefn
+
+
+@c isbanded scripts/linear-algebra/isbanded.m
+@anchor{XREFisbanded}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} isbanded (@var{A}, @var{lower}, @var{upper})
+Return true if @var{A} is a numeric matrix with entries confined between
+@var{lower} diagonals below the main diagonal and @var{upper} diagonals
+above the main diagonal.
+
+@var{lower} and @var{upper} must be non-negative integers.
+@xseealso{@ref{XREFisdiag,,isdiag}, @ref{XREFistril,,istril}, @ref{XREFistriu,,istriu}, @ref{XREFbandwidth,,bandwidth}}
+@end deftypefn
+
+
+@c isdiag scripts/linear-algebra/isdiag.m
+@anchor{XREFisdiag}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} isdiag (@var{A})
+Return true if @var{A} is a diagonal numeric matrix which is defined as a
+2-D array where all elements above and below the main diagonal are zero.
+@xseealso{@ref{XREFisbanded,,isbanded}, @ref{XREFistril,,istril}, @ref{XREFistriu,,istriu}, @ref{XREFdiag,,diag}, @ref{XREFbandwidth,,bandwidth}}
+@end deftypefn
+
+
+@c istril scripts/linear-algebra/istril.m
+@anchor{XREFistril}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} istril (@var{A})
+Return true if @var{A} is a lower triangular numeric matrix.
+
+A lower triangular matrix has nonzero entries only on the main diagonal and
+below.
+@xseealso{@ref{XREFistriu,,istriu}, @ref{XREFisbanded,,isbanded}, @ref{XREFisdiag,,isdiag}, @ref{XREFtril,,tril}, @ref{XREFbandwidth,,bandwidth}}
+@end deftypefn
+
+
+@c istriu scripts/linear-algebra/istriu.m
+@anchor{XREFistriu}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} istriu (@var{A})
+Return true if @var{A} is an upper triangular numeric matrix.
+
+An upper triangular matrix has nonzero entries only on the main diagonal and
+above.
+@xseealso{@ref{XREFisdiag,,isdiag}, @ref{XREFisbanded,,isbanded}, @ref{XREFistril,,istril}, @ref{XREFtriu,,triu}, @ref{XREFbandwidth,,bandwidth}}
+@end deftypefn
+
+
+@c isprime scripts/specfun/isprime.m
+@anchor{XREFisprime}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{tf} =} isprime (@var{x})
+Return a logical array which is true where the elements of @var{x} are prime
+numbers and false where they are not.
+
+A prime number is conventionally defined as a positive integer greater than
+1 (e.g., 2, 3, @dots{}) which is divisible only by itself and 1.  Octave
+extends this definition to include both negative integers and complex
+values.  A negative integer is prime if its positive counterpart is prime.
+This is equivalent to @code{isprime (abs (x))}.
+
+If @code{class (@var{x})} is complex, then primality is tested in the domain
+of Gaussian integers (@url{https://en.wikipedia.org/wiki/Gaussian_integer}).
+Some non-complex integers are prime in the ordinary sense, but not in the
+domain of Gaussian integers.  For example, @math{5 = (1+2i)*(1-2i)} shows
+that 5 is not prime because it has a factor other than itself and 1.
+Exercise caution when testing complex and real values together in the same
+matrix.
+
+Examples:
+
+@example
+@group
+isprime (1:6)
+  @xresult{}  0  1  1  0  1  0
+@end group
+@end example
+
+@example
+@group
+isprime ([i, 2, 3, 5])
+  @xresult{}  0  0  1  0
+@end group
+@end example
+
+Programming Note: @code{isprime} is suitable for all @var{x}
+in the range abs(@var{x})
+@tex
+$ < 2^{64}$.
+@end tex
+@ifnottex
+ < 2^64.
+@end ifnottex
+Cast inputs larger than @code{flintmax} to @code{uint64}.
+
+For larger inputs, use ‘sym’ if you have the Symbolic package installed
+and loaded:
+
+@example
+@group
+isprime (sym ('58745389709258902525390450') + (0:4))
+   @xresult{}  0  1  0  0  0
+@end group
+@end example
+
+Compatibility Note: @sc{matlab} does not extend the definition of prime
+numbers and will produce an error if given negative or complex inputs.
+@xseealso{@ref{XREFprimes,,primes}, @ref{XREFfactor,,factor}, @ref{XREFgcd,,gcd}, @ref{XREFlcm,,lcm}}
+@end deftypefn
+
+
+@c isuniform scripts/general/isuniform.m
+@anchor{XREFisuniform}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{tf} =} isuniform (@var{v})
+@deftypefnx {} {[@var{tf}, @var{delta}] =} isuniform (@var{v})
+Return true if the real vector @var{v} is uniformly spaced and false
+otherwise.
+
+A vector is uniform if the mean difference (@var{delta}) between all
+elements is the same to within a tolerance of
+@w{@code{4 * eps (max (abs (@var{v})))}}.
+
+The optional output @var{delta} is the uniform difference between elements.
+If the vector is not uniform then @var{delta} is @code{NaN}.  @var{delta}
+is of the same class as @var{v} for floating point inputs and of class
+double for integer, logical, and character inputs.
+
+Programming Notes: The output is always false for the special cases of an
+empty input or a scalar input.  If any element is @code{NaN} then the output
+is false.  If @var{delta} is smaller than the calculated relative tolerance
+then an absolute tolerance of @code{eps} is used.
+
+@xseealso{@ref{XREFlinspace,,linspace}, @ref{XREFcolon,,colon}}
+@end deftypefn
+
+
+If instead of knowing properties of variables, you wish to know which
+variables are defined and to gather other information about the
+workspace itself, @pxref{Status of Variables}.

@@ -1,0 +1,3826 @@
+@c DO NOT EDIT!  Generated automatically by munge-texi.pl.
+
+@c Copyright (C) 1996-2026 The Octave Project Developers
+@c
+@c This file is part of Octave.
+@c
+@c Octave is free software: you can redistribute it and/or modify it
+@c under the terms of the GNU General Public License as published by
+@c the Free Software Foundation, either version 3 of the License, or
+@c (at your option) any later version.
+@c
+@c Octave is distributed in the hope that it will be useful, but
+@c WITHOUT ANY WARRANTY; without even the implied warranty of
+@c MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+@c GNU General Public License for more details.
+@c
+@c You should have received a copy of the GNU General Public License
+@c along with Octave; see the file COPYING.  If not, see
+@c <https://www.gnu.org/licenses/>.
+
+@node Statistics
+@chapter Statistics
+
+Octave has support for various statistical methods, emphasizing basic
+descriptive statistics.  More advanced functions for probability distributions,
+statistical tests, random number generation, etc.@: are provided by the add-on
+Statistics package from Octave Packages.
+
+The functions that analyze data all assume that multi-dimensional data is
+arranged in a matrix where each row is an observation, and each column is a
+variable.  Thus, the matrix defined by
+
+@example
+@group
+a = [ 0.9, 0.7;
+      0.1, 0.1;
+      0.5, 0.4 ];
+@end group
+@end example
+
+@noindent
+contains three observations from a two-dimensional distribution.  While this is
+the default data arrangement, most functions support different arrangements.
+
+It should be noted that the statistics functions don't test for data containing
+NaN, NA, or Inf.  These values need to be detected and dealt with explicitly.
+See @ref{XREFisnan,,isnan}, @ref{XREFisna,,isna}, @ref{XREFisinf,,isinf},
+and @ref{XREFisfinite,,isfinite}.
+
+@menu
+* Descriptive Statistics::
+* Statistics on Sliding Windows of Data::
+* Basic Statistical Functions::
+* Forecasting Metrics::
+* Correlation and Regression Analysis::
+* Distributions::
+* Random Number Generation::
+@end menu
+
+@node Descriptive Statistics
+@section Descriptive Statistics
+
+One principal goal of descriptive statistics is to represent the essence of a
+large data set concisely.  Octave provides the mean, median, and mode functions
+which all summarize a data set with just a single number corresponding to
+the central tendency of the data.
+
+@c mean scripts/statistics/mean.m
+@anchor{XREFmean}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{m} =} mean (@var{x})
+@deftypefnx {} {@var{m} =} mean (@var{x}, @var{dim})
+@deftypefnx {} {@var{m} =} mean (@var{x}, @var{vecdim})
+@deftypefnx {} {@var{m} =} mean (@var{x}, "all")
+@deftypefnx {} {@var{m} =} mean (@dots{}, @var{nanflag})
+@deftypefnx {} {@var{m} =} mean (@dots{}, @var{outtype})
+@deftypefnx {} {@var{m} =} mean (@dots{}, @qcode{'Weights'}, @var{w})
+Compute the mean of the elements of @var{x}.
+
+The mean is defined as
+@tex
+$$ {\rm mean}(x) \equiv \bar{x} = {1\over N} \sum_{i=1}^N x_i $$
+where $N$ is the number of elements of @var{x}.
+@end tex
+@ifnottex
+
+@example
+mean (@var{x}) = SUM_i @var{x}(i) / N
+@end example
+
+@noindent
+where @math{N} is the number of elements in @var{x}.
+
+@end ifnottex
+
+The weighted mean is defined as
+@tex
+$$ {\rm mean_w}(x) \equiv \bar{x}_w = {\sum_{i=1}^N w_i x_i \over \sum_{i=1}^N w_i} $$
+where $N$ is the number of elements of @var{x}.
+@end tex
+@ifnottex
+
+@example
+weighted_mean (@var{x}) = SUM_i (@var{w}(i) * @var{x}(i)) / SUM_i (@var{w}(i))
+@end example
+
+@noindent
+where @math{N} is the number of elements in @var{x}.
+
+@end ifnottex
+
+If @var{x} is a vector, then @code{mean (@var{x})} returns the mean of the
+elements in @var{x}.
+
+If @var{x} is a matrix, then @code{mean (@var{x})} returns a row vector with
+each element containing the mean of the corresponding column in @var{x}.
+
+If @var{x} is an array, then @code{mean (@var{x})} computes the mean along
+the first non-singleton dimension of @var{x}.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@var{x}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{mean} to operate
+on all elements of @var{x}, and is equivalent to @code{mean (@var{x}(:))}.
+
+The optional input @var{outtype} specifies the data type that is returned.
+@var{outtype} can take the following values:
+
+@table @asis
+@item @qcode{'default'}
+Output is of type double, unless the input is single in which case the
+output is of type single.
+
+@item @qcode{'double'}
+Output is of type double.
+
+@item @qcode{'native'}
+Output is of the same type as the input as reported by
+@code{class (@var{x})}, unless the input is logical in which case the output
+is of type double.
+@end table
+
+The optional variable @var{nanflag} specifies whether to include or exclude
+NaN values from the calculation using any of the previously specified input
+argument combinations.  The default value for @var{nanflag} is
+@qcode{"includenan"} which keeps NaN values in the calculation.  To exclude
+NaN values set the value of @var{nanflag} to @qcode{"omitnan"}.  The output
+will still contain NaN values if @var{x} consists of all NaN values in the
+operating dimension.
+
+The optional argument pair @code{"Weights", @var{w}} specifies a weighting
+scheme @var{w}, which is applied on input @var{x}, so that @code{mean}
+computes the weighted mean.  When operating along a single dimension,
+@var{w} must be a vector of the same length as the operating dimension or it
+must have the same size as @var{x}.  When operating over an array slice
+defined by @var{vecdim}, @var{w} must have the same size as the operating
+array slice, i.e., @code{size (w) == size (@var{x})(@var{vecdim})}, or the
+same size as @var{x}.
+
+@xseealso{@ref{XREFmedian,,median}, @ref{XREFmode,,mode}, @ref{XREFmovmean,,movmean}}
+@end deftypefn
+
+
+@c median scripts/statistics/median.m
+@anchor{XREFmedian}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{m} =} median (@var{x})
+@deftypefnx {} {@var{m} =} median (@var{x}, @var{dim})
+@deftypefnx {} {@var{m} =} median (@var{x}, @var{vecdim})
+@deftypefnx {} {@var{m} =} median (@var{x}, "all")
+@deftypefnx {} {@var{m} =} median (@dots{}, @var{nanflag})
+@deftypefnx {} {@var{m} =} median (@dots{}, @var{outtype})
+Compute the median value of the elements of @var{x}.
+
+The median is defined on the sorted data @var{s}
+(@w{@code{@var{s} = sort (@var{x})}}) as
+@tex
+$$
+{\rm median} (x) =
+  \cases{s(\lceil N/2\rceil), & $N$ odd;\cr
+          (s(N/2)+s(N/2+1))/2, & $N$ even.}
+$$
+where $N$ is the number of elements of @var{x}.
+
+@end tex
+@ifnottex
+
+@example
+@group
+             |  @var{s}(ceil (N/2))          N odd
+median (@var{x}) = |
+             | (@var{s}(N/2) + @var{s}(N/2+1))/2   N even
+@end group
+@end example
+
+@end ifnottex
+
+If @var{x} is a vector, then @code{median (@var{x})} returns the median of
+the elements in @var{x}.
+
+If @var{x} is a matrix, then @code{median (@var{x})} returns a row vector
+with each element containing the median of the corresponding column in
+@var{x}.
+
+If @var{x} is an array, then @code{median (@var{x})} computes the median
+along the first non-singleton dimension of @var{x}.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@var{x}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{median} to
+operate on all elements of @var{x}, and is equivalent to
+@code{median (@var{x}(:))}.
+
+@code{median (@dots{}, @var{outtype})} returns the median with a specified
+data type, using any of the input arguments in the previous syntaxes.
+@var{outtype} can take the following values:
+
+@table @asis
+@item @qcode{"default"}
+Output is of type double, unless the input is single in which case the
+output is of type single.
+
+@item @qcode{"double"}
+Output is of type double.
+
+@item @qcode{"native"}.
+Output is of the same type as the input (@code{class (@var{x})}), unless the
+input is logical in which case the output is of type double.
+@end table
+
+The optional variable @var{nanflag} specifies whether to include or exclude
+NaN values from the calculation using any of the previously specified input
+argument combinations.  The default value for @var{nanflag} is
+@qcode{"includenan"} which keeps NaN values in the calculation.  To
+exclude NaN values set the value of @var{nanflag} to @qcode{"omitnan"}.
+The output will still contain NaN values if @var{x} consists of all NaN
+values in the operating dimension.
+
+@xseealso{@ref{XREFmean,,mean}, @ref{XREFmode,,mode}, @ref{XREFmovmedian,,movmedian}}
+@end deftypefn
+
+
+@c mode scripts/statistics/mode.m
+@anchor{XREFmode}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{m} =} mode (@var{x})
+@deftypefnx {} {@var{m} =} mode (@var{x}, @var{dim})
+@deftypefnx {} {@var{m} =} mode (@var{x}, @var{vecdim})
+@deftypefnx {} {@var{m} =} mode (@var{x}, "all")
+@deftypefnx {} {[@var{m}, @var{f}, @var{c}] =} mode (@dots{})
+Compute the most frequently occurring value in the input data @var{x}.
+
+@code{mode} determines the frequency of values along the first non-singleton
+dimension and returns the value with the highest frequency.  If two, or
+more, values have the same frequency @code{mode} returns the smallest.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@var{x}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.  If all dimensions in
+@var{vecdim} are greater than @code{ndims (@var{x})}, then @code{mode}
+will return @var{x}.
+
+Specifying the dimension as @qcode{"all"} will cause @code{mode} to operate
+on all elements of @var{x}, and is equivalent to @code{mode (@var{x}(:))}.
+
+The return variable @var{f} is the number of occurrences of the mode in
+the dataset.
+
+The cell array @var{c} contains all of the elements with the maximum
+frequency.
+@xseealso{@ref{XREFmean,,mean}, @ref{XREFmedian,,median}}
+@end deftypefn
+
+
+Using just one number, such as the mean, to represent an entire data set may
+not give an accurate picture of the data.  One way to characterize the fit is
+to measure the dispersion of the data.  Octave provides several functions for
+measuring dispersion.
+
+@c bounds scripts/statistics/bounds.m
+@anchor{XREFbounds}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {[@var{s}, @var{l}] =} bounds (@var{x})
+@deftypefnx {} {[@var{s}, @var{l}] =} bounds (@var{x}, @var{dim})
+@deftypefnx {} {[@var{s}, @var{l}] =} bounds (@var{x}, @var{vecdim})
+@deftypefnx {} {[@var{s}, @var{l}] =} bounds (@var{x}, "all")
+@deftypefnx {} {[@var{s}, @var{l}] =} bounds (@dots{}, @var{nanflag})
+Return the smallest and largest values of the input data @var{x}.
+
+If @var{x} is a vector, then @code{bounds (@var{x})} returns the smallest
+and largest values of the elements in @var{x} in @var{s} and @var{l},
+respectively.
+
+If @var{x} is a matrix, then @code{bounds (@var{x})} returns the smallest
+and largest values for each column of @var{x} as row vectors @var{s} and
+@var{l}, respectively.
+
+If @var{x} is an array, then @code{bounds (@var{x})} computes the smallest
+and largest values along the first non-singleton dimension of @var{x}.
+
+The data in @var{x} must be numeric.  By default, any NaN values are
+ignored.  The size of @var{s} and @var{l} is equal to the size of @var{x}
+except for the operating dimension, which becomes 1.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@code{@var{x}}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{bounds} to
+operate on all elements of @var{x}, and is equivalent to
+@code{bounds (@var{x}(:))}.
+
+The optional variable @var{nanflag} specifies whether to include or exclude
+NaN values from the calculation using any of the previously specified input
+argument combinations.  The default value for @var{nanflag} is
+@qcode{"omitnan"} which does not include NaN values in the result.  If the
+argument @qcode{"includenan"} is given, and there is a NaN present, then the
+result for both smallest (@var{s}) and largest (@var{l}) elements will be
+NaN.
+
+Usage Note: The bounds are a quickly computed measure of the dispersion of a
+data set, but are less accurate than @code{iqr} if there are outlying data
+points.
+@xseealso{@ref{XREFrange,,range}, @ref{XREFiqr,,iqr}, @ref{XREFmad,,mad}, @ref{XREFstd,,std}}
+@end deftypefn
+
+
+@c range scripts/statistics/range.m
+@anchor{XREFrange}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} range (@var{x})
+@deftypefnx {} {@var{y} =} range (@var{x}, @var{dim})
+@deftypefnx {} {@var{y} =} range (@var{x}, @var{vecdim})
+@deftypefnx {} {@var{y} =} range (@var{x}, "all")
+@deftypefnx {} {@var{y} =} range (@dots{}, @var{nanflag})
+Return the difference between the maximum and the minimum values of the
+input data @var{x}.
+
+If @var{x} is a vector, then @code{range (@var{x})} returns the difference
+between the maximum and minimum values of the elements in @var{x}.
+
+If @var{x} is a matrix, then @code{range (@var{x})} returns a row vector
+@var{y} with the difference between the maximum and minimum values for each
+column of @var{x}.
+
+If @var{x} is an array, then @code{range (@var{x})} computes the difference
+between the maximum and minimum values along the first non-singleton
+dimension of @var{x}.
+
+The data in @var{x} must be numeric.  By default, any NaN values are
+ignored.  The size of @var{r} is equal to the size of @var{x} except for
+the operating dimension, which becomes 1.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@code{@var{x}}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{range} to operate
+on all elements of @var{x}, and is equivalent to @code{range (@var{x}(:))}.
+
+The optional variable @var{nanflag} specifies whether to include or exclude
+NaN values from the calculation using any of the previously specified input
+argument combinations.  The default value for @var{nanflag} is
+@qcode{"omitnan"} which does not include NaN values in the result.  If the
+argument @qcode{"includenan"} is given, and there is a NaN present, then the
+corresponding result will be NaN.
+
+Usage Note: The range is a quickly computed measure of the dispersion of a
+data set, but is less accurate than @code{iqr} if there are outlying data
+points.
+@xseealso{@ref{XREFbounds,,bounds}, @ref{XREFiqr,,iqr}, @ref{XREFmad,,mad}, @ref{XREFstd,,std}}
+@end deftypefn
+
+
+@c iqr scripts/statistics/iqr.m
+@anchor{XREFiqr}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{r} =} iqr (@var{x})
+@deftypefnx {} {@var{r} =} iqr (@var{x}, @var{dim})
+@deftypefnx {} {@var{r} =} iqr (@var{x}, @var{vecdim})
+@deftypefnx {} {@var{r} =} iqr (@var{x}, @qcode{"all"})
+@deftypefnx {} {[@var{r}, @var{q}] =} iqr (@dots{})
+Compute the interquartile range of the input data @var{x}.
+
+The interquartile range is defined as the difference between the 75th and
+25th percentile values of @var{x} calculated using
+
+@example
+quantile (x, [0.25 , 0.75])
+@end example
+
+If @var{x} is a vector, then @code{iqr (@var{x})} computes the interquartile
+range of the elements in @var{x}.
+
+If @var{x} is a matrix, then @code{iqr (@var{x})} returns a row vector with
+each element containing the interquartile range of the corresponding column
+in @var{x}.
+
+If @var{x} is an array, then @code{iqr (@var{x})} computes the interquartile
+range along the first non-singleton dimension of @var{x}.
+
+The data in @var{x} must be numeric and any NaN values are ignored.  The
+size of @var{r} is equal to the size of @var{x} except for the operating
+dimension, which becomes 1.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@code{zeros (size (@var{x}))}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{iqr} to operate
+on all elements of @var{x}, and is equivalent to @code{iqr (@var{x}(:))}.
+
+The optional output @var{q} contains the quantiles for the 25th and 75th
+percentile of the data.
+
+Usage Note: As a measure of dispersion, the interquartile range is less
+affected by outliers than either @code{range} or @code{std}.  The
+interquartile range of a scalar is necessarily @code{0}.
+
+@xseealso{@ref{XREFbounds,,bounds}, @ref{XREFmad,,mad}, @ref{XREFrange,,range}, @ref{XREFstd,,std}, @ref{XREFprctile,,prctile}, @ref{XREFquantile,,quantile}}
+@end deftypefn
+
+
+@c mad scripts/statistics/mad.m
+@anchor{XREFmad}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{m} =} mad (@var{x})
+@deftypefnx {} {@var{m} =} mad (@var{x}, @var{opt})
+@deftypefnx {} {@var{m} =} mad (@var{x}, @var{opt}, @var{dim})
+@deftypefnx {} {@var{m} =} mad (@var{x}, @var{opt}, @var{vecdim})
+@deftypefnx {} {@var{m} =} mad (@var{x}, @var{opt}, "all")
+Compute the mean or median absolute deviation (MAD) of the elements of
+@var{x}.
+
+The mean absolute deviation is defined as
+
+@example
+@var{mad} = mean (abs (@var{x} - mean (@var{x})))
+@end example
+
+The median absolute deviation is defined as
+
+@example
+@var{mad} = median (abs (@var{x} - median (@var{x})))
+@end example
+
+@code{mad} excludes NaN values from calculation similar to using the
+@code{omitnan} option in @code{mean} and @code{median}.
+
+If @var{x} is a vector, then @code{mad (@var{x})} returns the mean absolute
+deviation of the elements in @var{x}.
+
+If @var{x} is a matrix, then @code{mad (@var{x})} returns a row vector with
+each element containing the mean absolute deviation of the corresponding
+column in @var{x}.
+
+If @var{x} is an array, then @code{mad (@var{x})} computes the mean absolute
+deviation along the first non-singleton dimension of @var{x}.
+
+The optional argument @var{opt} specifies whether mean or median absolute
+deviation is calculated.  The default is @code{0} which corresponds to mean
+absolute deviation; a value of @code{1} corresponds to median absolute
+deviation.  Passing an empty input @code{[]} defaults to mean absolute
+deviation.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@code{zeros (size (@var{x}))}.
+
+Specifying the dimension as @var{vecdim}, a vector of non-repeating
+dimensions, will return the @code{mad} over the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{mad} to operate
+on all elements of @var{x}, and is equivalent to @code{mad (@var{x}(:))}.
+
+Usage Note: As a measure of dispersion, @code{mad} is less affected by
+outliers than @code{std}.
+
+@xseealso{@ref{XREFbounds,,bounds}, @ref{XREFrange,,range}, @ref{XREFiqr,,iqr}, @ref{XREFstd,,std}, @ref{XREFmean,,mean}, @ref{XREFmedian,,median}}
+@end deftypefn
+
+
+@c meansq scripts/statistics/meansq.m
+@anchor{XREFmeansq}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} meansq (@var{x})
+@deftypefnx {} {@var{y} =} meansq (@var{x}, @var{dim})
+@deftypefnx {} {@var{y} =} meansq (@var{x}, @var{vecdim})
+@deftypefnx {} {@var{y} =} meansq (@var{x}, "all")
+@deftypefnx {} {@var{y} =} meansq (@dots{}, @var{nanflag})
+Compute the mean square of the input data @var{x}.
+
+The mean square is defined as
+@tex
+$$
+{\rm meansq} (x) = {{1 \over N} \sum_{i=1}^N {|x_i|}^2}
+$$
+where $N$ is the number of elements of @var{x}.
+
+@end tex
+@ifnottex
+
+@example
+@group
+meansq (@var{x}) = 1/N SUM_i @var{x}(i)^2
+@end group
+@end example
+
+@noindent
+where @math{N} is the length of the @var{x} vector.
+
+@end ifnottex
+If @var{x} is a vector, then @code{meansq (@var{x})} returns the mean square
+of the elements in @var{x}.
+
+If @var{x} is a matrix, then @code{meansq (@var{x})} returns a row vector
+with each element containing the mean square of the corresponding column in
+@var{x}.
+
+If @var{x} is an array, then @code{meansq (@var{x})} computes the mean
+square along the first non-singleton dimension of @var{x}.
+
+The data in @var{x} must be numeric.  The size of @var{y} is equal to the
+size of @var{x} except for the operating dimension, which becomes 1.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@code{@var{x}.^2}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{meansq} to
+operate on all elements of @var{x}, and is equivalent to
+@code{meansq (@var{x}(:))}.
+
+The optional variable @var{nanflag} specifies whether to include or exclude
+NaN values from the calculation using any of the previously specified input
+argument combinations.  The default value for @var{nanflag} is
+@qcode{"includenan"} which keeps NaN values in the calculation.  To exclude
+NaN values set the value of @var{nanflag} to @qcode{"omitnan"}.  The output
+will still contain NaN values if @var{x} consists of all NaN values in the
+operating dimension.
+
+@xseealso{@ref{XREFrms,,rms}, @ref{XREFvar,,var}, @ref{XREFstd,,std}, @ref{XREFmoment,,moment}}
+@end deftypefn
+
+
+@c rms scripts/statistics/rms.m
+@anchor{XREFrms}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} rms (@var{x})
+@deftypefnx {} {@var{y} =} rms (@var{x}, @var{dim})
+@deftypefnx {} {@var{y} =} rms (@var{x}, @var{vecdim})
+@deftypefnx {} {@var{y} =} rms (@var{x}, "all")
+@deftypefnx {} {@var{y} =} rms (@dots{}, @var{nanflag})
+Compute the root mean square of the input data @var{x}.
+
+The root mean square is defined as
+@tex
+$$
+{\rm rms} (x) = {\sqrt{{1 \over N} \sum_{i=1}^N {|x_i|}^2}}
+$$
+where $N$ is the number of elements of @var{x}.
+
+@end tex
+@ifnottex
+
+@example
+@group
+rms (@var{x}) = sqrt (1/N SUM_i @var{x}(i)^2)
+@end group
+@end example
+
+@noindent
+where @math{N} is the length of the @var{x} vector.
+
+@end ifnottex
+If @var{x} is a vector, then @code{rms (@var{x})} returns the root mean
+square of the elements in @var{x}.
+
+If @var{x} is a matrix, then @code{rms (@var{x})} returns a row vector
+with each element containing the root mean square of the corresponding
+column in @var{x}.
+
+If @var{x} is an array, then @code{rms (@var{x})} computes the root mean
+square along the first non-singleton dimension of @var{x}.
+
+The data in @var{x} must be numeric.  The size of @var{y} is equal to the
+size of @var{x} except for the operating dimension, which becomes 1.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@code{@var{x}}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{rms} to operate
+on all elements of @var{x}, and is equivalent to @code{rms (@var{x}(:))}.
+
+The optional variable @var{nanflag} specifies whether to include or exclude
+NaN values from the calculation using any of the previously specified input
+argument combinations.  The default value for @var{nanflag} is
+@qcode{"includenan"} which keeps NaN values in the calculation.  To exclude
+NaN values set the value of @var{nanflag} to @qcode{"omitnan"}.  The output
+will still contain NaN values if @var{x} consists of all NaN values in the
+operating dimension.
+
+@xseealso{@ref{XREFmeansq,,meansq}, @ref{XREFvar,,var}, @ref{XREFstd,,std}, @ref{XREFmoment,,moment}}
+@end deftypefn
+
+
+@c std scripts/statistics/std.m
+@anchor{XREFstd}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{s} =} std (@var{x})
+@deftypefnx {} {@var{s} =} std (@var{x}, @var{w})
+@deftypefnx {} {@var{s} =} std (@var{x}, @var{w}, @var{dim})
+@deftypefnx {} {@var{s} =} std (@var{x}, @var{w}, @var{vecdim})
+@deftypefnx {} {@var{s} =} std (@var{x}, @var{w}, @qcode{"all"})
+@deftypefnx {} {@var{s} =} std (@dots{}, @var{nanflag})
+@deftypefnx {} {[@var{s}, @var{m}] =} std (@dots{})
+Compute the standard deviation of the elements of @var{x}.
+
+The standard deviation is defined as
+@tex
+$$ {\rm std}(x) = \sqrt{{1\over N-1} \sum_{i=1}^N (x_i - \bar x )^2} $$
+where $\bar{x}$ is the mean value of @var{x} and $N$ is the number of
+elements of @var{x}.
+@end tex
+@ifnottex
+
+@example
+@group
+std (@var{x}) = sqrt ((1 / (N-1)) * SUM_i ((@var{x}(i) - mean(@var{x}))^2))
+@end group
+@end example
+
+@noindent
+where @math{N} is the number of elements of @var{x}.
+@end ifnottex
+
+If @var{x} is a vector, then @code{std (@var{x})} returns the standard
+deviation of the elements in @var{x}.
+
+If @var{x} is a matrix, then @code{std (@var{x})} returns a row vector with
+each element containing the standard deviation of the corresponding column
+in @var{x}.
+
+If @var{x} is an array, then @code{std (@var{x})} computes the standard
+deviation along the first non-singleton dimension of @var{x}.
+
+The optional argument @var{w} determines the weighting scheme to use.  Valid
+values are:
+
+@table @asis
+@item 0 [default]:
+Normalize with @math{N-1} (population standard deviation).  This provides
+the square root of the best unbiased estimator of the standard deviation.
+
+@item 1:
+Normalize with @math{N} (sample standard deviation).  This provides the
+square root of the second moment around the mean.
+
+@item a vector:
+Compute the weighted standard deviation with non-negative weights.
+The length of @var{w} must equal the size of @var{x} in the operating
+dimension.  NaN values are permitted in @var{w}, will be multiplied with the
+associated values in @var{x}, and can be excluded by the @var{nanflag}
+option.
+
+@item an array:
+Similar to vector weights, but @var{w} must be the same size as @var{x}.  If
+the operating dimension is supplied as @var{vecdim} or @qcode{"all"} and
+@var{w} is not a scalar, @var{w} must be an same-sized array.
+@end table
+
+Note: @var{w} must always be specified before specifying any of the
+following dimension options.  To use the default value for @var{w} you may
+pass an empty input argument @code{[]}.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@code{zeros (size (@var{x}))}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{std} to operate
+on all elements of @var{x}, and is equivalent to @code{std (@var{x}(:))}.
+
+The optional variable @var{nanflag} specifies whether to include or exclude
+NaN values from the calculation using any of the previously specified input
+argument combinations.  The default value for @var{nanflag} is
+@qcode{"includenan"} which keeps NaN values in the calculation.  To
+exclude NaN values set the value of @var{nanflag} to @qcode{"omitnan"}.
+The output will still contain NaN values if @var{x} consists of all NaN
+values in the operating dimension.
+
+The optional second output variable @var{m} contains the mean of the
+elements of @var{x} used to calculate the standard deviation.  If @var{v} is
+the weighted standard deviation, then @var{m} is also the weighted mean.
+
+@xseealso{@ref{XREFvar,,var}, @ref{XREFbounds,,bounds}, @ref{XREFmad,,mad}, @ref{XREFrange,,range}, @ref{XREFiqr,,iqr}, @ref{XREFmean,,mean}, @ref{XREFmedian,,median}}
+@end deftypefn
+
+
+In addition to knowing the size of a dispersion it is useful to know the shape
+of the data set.  For example, are data points massed to the left or right
+of the mean?  Octave provides several common measures to describe the shape
+of the data set.  Octave can also calculate moments allowing arbitrary shape
+measures to be developed.
+
+@c var scripts/statistics/var.m
+@anchor{XREFvar}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{v} =} var (@var{x})
+@deftypefnx {} {@var{v} =} var (@var{x}, @var{w})
+@deftypefnx {} {@var{v} =} var (@var{x}, @var{w}, @var{dim})
+@deftypefnx {} {@var{v} =} var (@var{x}, @var{w}, @var{vecdim})
+@deftypefnx {} {@var{v} =} var (@var{x}, @var{w}, @qcode{"all"})
+@deftypefnx {} {@var{v} =} var (@dots{}, @var{nanflag})
+@deftypefnx {} {[@var{v}, @var{m}] =} var (@dots{})
+Compute the variance of the elements of @var{x}.
+
+The variance is defined as
+@tex
+$$ {\rm var}(x) = {1\over N-1} \sum_{i=1}^N (x_i - \bar x )^2 $$
+where $\bar{x}$ is the mean value of @var{x} and $N$ is the number of
+elements of @var{x}.
+@end tex
+@ifnottex
+
+@example
+@group
+var (@var{x}) = (1 / (N-1)) * SUM_i ((@var{x}(i) - mean(@var{x}))^2)
+@end group
+@end example
+
+@noindent
+where @math{N} is the number of elements of @var{x}.
+@end ifnottex
+
+If @var{x} is a vector, then @code{var (@var{x})} returns the variance of
+the elements in @var{x}.
+
+If @var{x} is a matrix, then @code{var (@var{x})} returns a row vector with
+each element containing the variance of the corresponding column in @var{x}.
+
+If @var{x} is an array, then @code{var (@var{x})} computes the variance
+along the first non-singleton dimension of @var{x}.
+
+The optional argument @var{w} determines the weighting scheme to use.  Valid
+values are:
+
+@table @asis
+@item 0 [default]:
+Normalize with @math{N-1} (population variance).  This provides the square
+root of the best unbiased estimator of the variance.
+
+@item 1:
+Normalize with @math{N} (sample variance).  This provides the square root of
+the second moment around the mean.
+
+@item a vector:
+Compute the weighted variance with non-negative weights.  The length of
+@var{w} must equal the size of @var{x} in the operating dimension.  NaN
+values are permitted in @var{w}, will be multiplied with the associated
+values in @var{x}, and can be excluded by the @var{nanflag} option.
+
+@item an array:
+Similar to vector weights, but @var{w} must be the same size as @var{x}.  If
+the operating dimension is supplied as @var{vecdim} or @qcode{"all"} and
+@var{w} is not a scalar, then @var{w} must match the size of the specified
+array slice.
+@end table
+
+Note: @var{w} must always be specified before specifying any of the
+following dimension options.  To use the default value for @var{w} you
+may pass an empty input argument @code{[]}.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@code{zeros (size (@var{x}))}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{var} to operate
+on all elements of @var{x}, and is equivalent to @code{var (@var{x}(:))}.
+
+The optional variable @var{nanflag} specifies whether to include or exclude
+NaN values from the calculation using any of the previously specified input
+argument combinations.  The default value for @var{nanflag} is
+@qcode{"includenan"} which keeps NaN values in the calculation.  To
+exclude NaN values set the value of @var{nanflag} to @qcode{"omitnan"}.
+The output will still contain NaN values if @var{x} consists of all NaN
+values in the operating dimension.
+
+The optional second output variable @var{m} contains the mean of the
+elements of @var{x} used to calculate the variance.  If @var{v} is the
+weighted variance, then @var{m} is also the weighted mean.
+
+@xseealso{@ref{XREFstd,,std}, @ref{XREFmean,,mean}, @ref{XREFcov,,cov}, @ref{XREFskewness,,skewness}, @ref{XREFkurtosis,,kurtosis}, @ref{XREFmoment,,moment}}
+@end deftypefn
+
+
+@c skewness scripts/statistics/skewness.m
+@anchor{XREFskewness}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} skewness (@var{x})
+@deftypefnx {} {@var{y} =} skewness (@var{x}, @var{flag})
+@deftypefnx {} {@var{y} =} skewness (@var{x}, @var{flag}, @var{dim})
+@deftypefnx {} {@var{y} =} skewness (@var{x}, @var{flag}, @var{vecdim})
+@deftypefnx {} {@var{y} =} skewness (@var{x}, @var{flag}, "all")
+Compute the sample skewness of the input data @var{x}.
+
+The sample skewness is defined as
+@tex
+$$
+{\rm skewness} (@var{x}) = {{{1\over N}\,
+         \sum_{i=1}^N (x_i - \bar{x})^3} \over \sigma^3},
+$$
+where $N$ is the length of @var{x}, $\bar{x}$ its mean and $\sigma$
+its (uncorrected) standard deviation.
+@end tex
+@ifnottex
+
+@example
+@group
+               mean ((@var{x} - mean (@var{x})).^3)
+skewness (@var{X}) = ------------------------.
+                      std (@var{x}).^3
+@end group
+@end example
+
+@end ifnottex
+
+@noindent
+The optional argument @var{flag} controls which normalization is used.
+If @var{flag} is equal to 1 (default value, used when @var{flag} is omitted
+or empty), return the sample skewness as defined above.  If @var{flag} is
+equal to 0, return the adjusted skewness coefficient instead:
+@tex
+$$
+{\rm skewness} (@var{x}) = {\sqrt{N (N - 1)} \over N - 2} \times \,
+  {{{1 \over N} \sum_{i=1}^N (x_i - \bar{x})^3} \over \sigma^3}
+$$
+@end tex
+@ifnottex
+
+@example
+@group
+                  sqrt (N*(N-1))   mean ((@var{x} - mean (@var{x})).^3)
+skewness (@var{X}, 0) = -------------- * ------------------------.
+                      (N - 2)             std (@var{x}).^3
+@end group
+@end example
+
+@noindent
+where @math{N} is the length of the @var{x} vector.
+
+@end ifnottex
+The adjusted skewness coefficient is obtained by replacing the sample second
+and third central moments by their bias-corrected versions.
+
+If @var{x} is a vector, then @code{skewness (@var{x})} computes the skewness
+of the data in @var{x}.
+
+If @var{x} is a matrix, then @code{skewness (@var{x})} returns a row vector
+with each element containing the skewness of the data of the corresponding
+column in @var{x}.
+
+If @var{x} is an array, then @code{skewness (@var{x})} computes the skewness
+of the data along the first non-singleton dimension of @var{x}.
+
+The data in @var{x} must be numeric and any NaN values are ignored.
+The size of @var{y} is equal to the size of @var{x} except for the operating
+dimension, which becomes 1.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@code{@var{x}}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{skewness} to
+operate on all elements of @var{x}, and is equivalent to
+@code{skewness (@var{x}(:))}.
+@xseealso{@ref{XREFvar,,var}, @ref{XREFkurtosis,,kurtosis}, @ref{XREFmoment,,moment}}
+@end deftypefn
+
+
+@c kurtosis scripts/statistics/kurtosis.m
+@anchor{XREFkurtosis}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} kurtosis (@var{x})
+@deftypefnx {} {@var{y} =} kurtosis (@var{x}, @var{flag})
+@deftypefnx {} {@var{y} =} kurtosis (@var{x}, @var{flag}, @var{dim})
+@deftypefnx {} {@var{y} =} kurtosis (@var{x}, @var{flag}, @var{vecdim})
+@deftypefnx {} {@var{y} =} kurtosis (@var{x}, @var{flag}, "all")
+Compute the sample kurtosis of the input data @var{x}.
+
+The sample kurtosis is defined as
+@tex
+$$
+\kappa_1 = {{{1 \over N} \sum_{i=1}^N (x_i - \bar{x})^4} \over \sigma^4},
+$$
+where $N$ is the length of @var{x}, $\bar{x}$ its mean, and $\sigma$ its
+(uncorrected) standard deviation.
+@end tex
+@ifnottex
+
+@example
+@group
+     mean ((@var{x} - mean (@var{x})).^4)
+k1 = ------------------------
+            std (@var{x}).^4
+@end group
+@end example
+
+@end ifnottex
+
+@noindent
+The optional argument @var{flag} controls which normalization is used.
+If @var{flag} is equal to 1 (default value, used when @var{flag} is omitted
+or empty), return the sample kurtosis as defined above.  If @var{flag} is
+equal to 0, return the @w{"bias-corrected"}@ kurtosis coefficient instead:
+@tex
+$$
+\kappa_0 = 3 + {\scriptstyle N - 1 \over \scriptstyle (N - 2)(N - 3)} \,
+    \left( (N + 1)\, \kappa_1 - 3 (N - 1) \right)
+$$
+@end tex
+@ifnottex
+
+@example
+@group
+              N - 1
+k0 = 3 + -------------- * ((N + 1) * k1 - 3 * (N - 1))
+         (N - 2)(N - 3)
+@end group
+@end example
+
+@noindent
+where @math{N} is the length of the @var{x} vector.
+
+@end ifnottex
+The bias-corrected kurtosis coefficient is obtained by replacing the sample
+second and fourth central moments by their unbiased versions.  It is an
+unbiased estimate of the population kurtosis for normal populations.
+
+If @var{x} is a vector, then @code{kurtosis (@var{x})} computes the kurtosis
+of the data in @var{x}.
+
+If @var{x} is a matrix, then @code{kurtosis (@var{x})} returns a row vector
+with each element containing the kurtosis of the data of the corresponding
+column in @var{x}.
+
+If @var{x} is an array, then @code{kurtosis (@var{x})} computes the kurtosis
+of the data along the first non-singleton dimension of @var{x}.
+
+The data in @var{x} must be numeric and any NaN values are ignored.
+The size of @var{y} is equal to the size of @var{x} except for the operating
+dimension, which becomes 1.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@code{@var{x}}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{kurtosis} to
+operate on all elements of @var{x}, and is equivalent to
+@code{kurtosis (@var{x}(:))}.
+
+@xseealso{@ref{XREFvar,,var}, @ref{XREFskewness,,skewness}, @ref{XREFmoment,,moment}}
+@end deftypefn
+
+
+@c moment scripts/statistics/moment.m
+@anchor{XREFmoment}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{m} =} moment (@var{x}, @var{p})
+@deftypefnx {} {@var{m} =} moment (@var{x}, @var{p}, @var{dim})
+@deftypefnx {} {@var{m} =} moment (@var{x}, @var{p}, @var{vecdim})
+@deftypefnx {} {@var{m} =} moment (@var{x}, @var{p}, "all")
+@deftypefnx {} {@var{m} =} moment (@var{x}, @var{p}, @dots{}, @var{type})
+Compute the @var{p}-th central moment of the input data @var{x}.
+
+The @var{p}-th central moment of @var{x} is defined as:
+@tex
+$$
+{{1 \over N} \sum_{i=1}^N (x_i - \bar{x})^p}
+$$
+where $\bar{x}$ is the mean value of @var{x} and $N$ is the number of
+elements of @var{x}.
+
+@end tex
+@ifnottex
+
+@example
+@group
+1/N SUM_i (@var{x}(i) - mean(@var{x}))^@var{p}
+@end group
+@end example
+
+@noindent
+where @math{N} is the length of the @var{x} vector.
+
+@end ifnottex
+
+If @var{x} is a vector, then @code{moment (@var{x})} computes the @var{p}-th
+central moment of the data in @var{x}.
+
+If @var{x} is a matrix, then @code{moment (@var{x})} returns a vector with
+element containing the @var{p}-th central moment of the corresponding column
+in @var{x}.
+
+If @var{x} is an array, then @code{moment (@var{x})} computes the @var{p}-th
+central moment along the first non-singleton dimension of @var{x}.
+
+The data in @var{x} must be a non-empty numeric array and any NaN values
+along the operating dimension will return NaN for central moment.  The size
+of @var{m} is equal to the size of @var{x} except for the operating
+dimension, which becomes 1.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@var{x}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.  If all dimensions in
+@var{vecdim} are greater than @code{ndims (@var{x})}, then @code{moment}
+will return @var{x}.
+
+Specifying the dimension as @qcode{"all"} will cause @code{moment} to
+operate on all elements of @var{x}, and is equivalent to
+@code{moment (@var{x}(:))}.
+
+The optional fourth input argument, @var{type}, is a string specifying the
+type of moment to be computed.
+Valid options are:
+
+@table @asis
+@item @qcode{"c"}
+Central Moment (default).
+
+@item  @qcode{"a"}
+@itemx @qcode{"ac"}
+Absolute Central Moment.  The moment about the mean ignoring sign
+defined as
+@tex
+$$
+{{1 \over N} \sum_{i=1}^N {| x_i - \bar{x} |}^p}
+$$
+@end tex
+@ifnottex
+
+@example
+@group
+1/N SUM_i (abs (@var{x}(i) - mean(@var{x})))^@var{p}
+@end group
+@end example
+
+@end ifnottex
+
+@item @qcode{"r"}
+Raw Moment.  The moment about zero defined as
+@tex
+$$
+{{1 \over N} \sum_{i=1}^N {x_i}^p}
+$$
+@end tex
+@ifnottex
+
+@example
+@group
+moment (@var{x}) = 1/N SUM_i @var{x}(i)^@var{p}
+@end group
+@end example
+
+@end ifnottex
+
+@item @nospell{@qcode{"ar"}}
+Absolute Raw Moment.  The moment about zero ignoring sign defined as
+@tex
+$$
+{{1 \over N} \sum_{i=1}^N {|x_i|}^p}
+$$
+@end tex
+@ifnottex
+
+@example
+@group
+1/N SUM_i ( abs (@var{x}(i)) )^@var{p}
+@end group
+@end example
+
+@end ifnottex
+@end table
+@xseealso{@ref{XREFvar,,var}, @ref{XREFskewness,,skewness}, @ref{XREFkurtosis,,kurtosis}}
+@end deftypefn
+
+
+@c quantile scripts/statistics/quantile.m
+@anchor{XREFquantile}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{q} =} quantile (@var{x})
+@deftypefnx {} {@var{q} =} quantile (@var{x}, @var{p})
+@deftypefnx {} {@var{q} =} quantile (@var{x}, @var{n})
+@deftypefnx {} {@var{q} =} quantile (@var{x}, @dots{}, @var{dim})
+@deftypefnx {} {@var{q} =} quantile (@var{x}, @dots{}, @var{vecdim})
+@deftypefnx {} {@var{q} =} quantile (@var{x}, @dots{}, "all")
+@deftypefnx {} {@var{q} =} quantile (@var{x}, @var{p}, @dots{}, @var{method})
+@deftypefnx {} {@var{q} =} quantile (@var{x}, @var{n}, @dots{}, @var{method})
+Compute the quantiles of the input data @var{x}.
+
+If @var{x} is a vector, then @code{quantile (@var{x})} computes the quantiles
+specified by @var{p} of the data in @var{x}.
+
+If @var{x} is a matrix, then @code{quantile (@var{x})} returns a matrix such
+that the i-th row of @var{q} contains the @var{p}(i)th quantiles of each
+column of @var{x}.
+
+If @var{x} is an array, then @code{quantile (@var{x})} computes the quantiles
+specified by @var{p} along the first non-singleton dimension of @var{x}.
+
+The data in @var{x} must be numeric and any NaN values are ignored.  The
+size of @var{q} is equal to the size of @var{x} except for the operating
+dimension, which equals to the number of quantiles specified by @var{p}
+or @var{n}.
+
+@var{p} is a numeric vector specifying the percentiles to be computed, which
+correspond to the cumulative probabilities of the data .  All elements of
+@var{p} must be in the range from 0 to 1.  If @var{p} is unspecified, return
+the percentiles for @code{[0.00 0.25 0.50 0.75 1.00]}.  Alternatively, the
+second input argument may be specified as a positive integer value @var{n},
+in which case @code{quantile} returns the quantiles for @var{n} evenly
+spaced cumulative probabilities computed as (1/(@var{n} + 1), 2/(@var{n}
++ 1), @dots{}, @var{n}/(@var{n} + 1)) for @code{@var{n} > 1}.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return N
+copies of @var{x} along the operating dimension, where N is the number of
+specified quantiles.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.  If all dimensions in
+@var{vecdim} are greater than @code{ndims (@var{x})}, then @code{quantile}
+will return N copies of @var{x} along the smallest dimension in
+@var{vecdim}.
+
+Specifying the dimension as @qcode{"all"} will cause @code{iqr} to operate
+on all elements of @var{x}, and is equivalent to @code{iqr (@var{x}(:))}.
+
+The fourth input argument, @var{methods}, determines the method to calculate
+the quantiles specified by @var{p} or @var{n}.  The methods available to
+calculate sample quantiles are the nine methods used by R
+(@url{https://www.r-project.org/}) and can be specified by the corresponding
+integer value.  The default value is @w{@var{method} = 5}.
+
+Discontinuous sample quantile methods 1, 2, and 3
+
+@enumerate 1
+@item Method 1: Inverse of empirical distribution function.
+
+@item Method 2: Similar to method 1 but with averaging at discontinuities.
+
+@item Method 3: SAS definition: nearest even order statistic.
+@end enumerate
+
+Continuous sample quantile methods 4 through 9, where
+@tex
+$p(k)$
+@end tex
+@ifnottex
+@var{p}(k)
+@end ifnottex
+is the linear
+interpolation function respecting each method's representative cdf.
+
+@enumerate 4
+@item Method 4:
+@tex
+$p(k) = k / N$.
+@end tex
+@ifnottex
+@var{p}(k) = k / N.
+@end ifnottex
+That is, linear interpolation of the empirical cdf, where @math{N} is the
+length of @var{P}.
+
+@item Method 5:
+@tex
+$p(k) = (k - 0.5) / N$.
+@end tex
+@ifnottex
+@var{p}(k) = (k - 0.5) / N.
+@end ifnottex
+That is, a piecewise linear function where the knots are the values midway
+through the steps of the empirical cdf.
+
+@item Method 6:
+@tex
+$p(k) = k / (N + 1)$.
+@end tex
+@ifnottex
+@var{p}(k) = k / (N + 1).
+@end ifnottex
+
+@item Method 7:
+@tex
+$p(k) = (k - 1) / (N - 1)$.
+@end tex
+@ifnottex
+@var{p}(k) = (k - 1) / (N - 1).
+@end ifnottex
+
+@item Method 8:
+@tex
+$p(k) = (k - 1/3) / (N + 1/3)$.
+@end tex
+@ifnottex
+@var{p}(k) = (k - 1/3) / (N + 1/3).
+@end ifnottex
+The resulting quantile estimates are approximately median-unbiased
+regardless of the distribution of @var{x}.
+
+@item Method 9:
+@tex
+$p(k) = (k - 3/8) / (N + 1/4)$.
+@end tex
+@ifnottex
+@var{p}(k) = (k - 3/8) / (N + 1/4).
+@end ifnottex
+The resulting quantile estimates are approximately unbiased for the
+expected order statistics if @var{x} is normally distributed.
+@end enumerate
+
+@nospell{Hyndman and Fan} (1996) recommend method 8.  Maxima, S, and R
+(versions prior to 2.0.0) use 7 as their default.  Minitab and SPSS
+use method 6.  @sc{matlab} uses method 5.
+
+References:
+
+@itemize @bullet
+@item @nospell{R. A. Becker, J. M. Chambers, and A. R. Wilks},
+@cite{The New S Language}, @nospell{Wadsworth & Brooks/Cole}, 1988.
+
+@item @nospell{R. J. Hyndman, and Y. Fan}, "Sample quantiles in statistical
+packages", @cite{American Statistician}, 50, @w{pp.@: 361}--365, 1996.
+
+@item @cite{R: A Language and Environment for Statistical Computing},
+@url{https://cran.r-project.org/doc/manuals/fullrefman.pdf}.
+@end itemize
+
+Examples:
+@c Set example in small font to prevent overfull line
+
+@smallexample
+@group
+x = randi (1000, [10, 1]);  # Create empirical data in range 1-1000
+q = quantile (x, [0, 1]);   # Return minimum, maximum of distribution
+q = quantile (x, [0.25 0.5 0.75]); # Return quartiles of distribution
+@end group
+@end smallexample
+@xseealso{@ref{XREFprctile,,prctile}}
+@end deftypefn
+
+
+@c prctile scripts/statistics/prctile.m
+@anchor{XREFprctile}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{q} =} prctile (@var{x})
+@deftypefnx {} {@var{q} =} prctile (@var{x}, @var{p})
+@deftypefnx {} {@var{q} =} prctile (@var{x}, @var{p}, @var{dim})
+@deftypefnx {} {@var{q} =} prctile (@var{x}, @var{p}, @var{vecdim})
+@deftypefnx {} {@var{q} =} prctile (@var{x}, @var{p}, "all")
+@deftypefnx {} {@var{q} =} prctile (@var{x}, @var{p}, @dots{}, @var{method})
+Compute the percentiles of the input data @var{x}.
+
+If @var{x} is a vector, then @code{prctile (@var{x})} computes the
+percentiles specified by @var{p} of the data in @var{x}.
+
+If @var{x} is a matrix, then @code{prctile (@var{x})} returns a matrix such
+that the i-th row of @var{q} contains the @var{p}(i)th percentiles of each
+column of @var{x}.
+
+If @var{x} is an array, then @code{prctile (@var{x})} computes the
+percentiles specified by @var{p} along the first non-singleton dimension of
+@var{x}.
+
+The data in @var{x} must be numeric and any NaN values are ignored.  The
+size of @var{q} is equal to the size of @var{x} except for the operating
+dimension, which equals to the number of quantiles specified by @var{p}.
+
+@var{p} is a numeric vector specifying the percentiles to be computed.  All
+elements of @var{p} must be in the range from 0 to 100.  If @var{p} is
+unspecified, return the percentiles for @code{[0 25 50 75 100]}.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return N
+copies of @var{x} along the operating dimension, where N is the number of
+specified percentiles.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.  If all dimensions in
+@var{vecdim} are greater than @code{ndims (@var{x})}, then @code{quantile}
+will return N copies of @var{x} along the smallest dimension in
+@var{vecdim}.
+
+Specifying the dimension as @qcode{"all"} will cause @code{iqr} to operate
+on all elements of @var{x}, and is equivalent to @code{iqr (@var{x}(:))}.
+
+The fourth input argument, @var{methods}, determines the method to calculate
+the percentiles specified by @var{p}.  The methods available to calculate
+sample percentiles are the nine methods used by R
+(@url{https://www.r-project.org/}) and can be specified by the corresponding
+integer value.  The default value is @w{@var{method} = 5}.
+
+Discontinuous sample quantile methods 1, 2, and 3
+
+@enumerate 1
+@item Method 1: Inverse of empirical distribution function.
+
+@item Method 2: Similar to method 1 but with averaging at discontinuities.
+
+@item Method 3: SAS definition: nearest even order statistic.
+@end enumerate
+
+Continuous sample quantile methods 4 through 9, where
+@tex
+$p(k)$
+@end tex
+@ifnottex
+@var{p}(k)
+@end ifnottex
+is the linear
+interpolation function respecting each method's representative cdf.
+
+@enumerate 4
+@item Method 4:
+@tex
+$p(k) = k / N$.
+@end tex
+@ifnottex
+@var{p}(k) = k / N.
+@end ifnottex
+That is, linear interpolation of the empirical cdf, where @math{N} is the
+length of @var{P}.
+
+@item Method 5:
+@tex
+$p(k) = (k - 0.5) / N$.
+@end tex
+@ifnottex
+@var{p}(k) = (k - 0.5) / N.
+@end ifnottex
+That is, a piecewise linear function where the knots are the values midway
+through the steps of the empirical cdf.
+
+@item Method 6:
+@tex
+$p(k) = k / (N + 1)$.
+@end tex
+@ifnottex
+@var{p}(k) = k / (N + 1).
+@end ifnottex
+
+@item Method 7:
+@tex
+$p(k) = (k - 1) / (N - 1)$.
+@end tex
+@ifnottex
+@var{p}(k) = (k - 1) / (N - 1).
+@end ifnottex
+
+@item Method 8:
+@tex
+$p(k) = (k - 1/3) / (N + 1/3)$.
+@end tex
+@ifnottex
+@var{p}(k) = (k - 1/3) / (N + 1/3).
+@end ifnottex
+The resulting quantile estimates are approximately median-unbiased
+regardless of the distribution of @var{x}.
+
+@item Method 9:
+@tex
+$p(k) = (k - 3/8) / (N + 1/4)$.
+@end tex
+@ifnottex
+@var{p}(k) = (k - 3/8) / (N + 1/4).
+@end ifnottex
+The resulting quantile estimates are approximately unbiased for the
+expected order statistics if @var{x} is normally distributed.
+@end enumerate
+@xseealso{@ref{XREFquantile,,quantile}}
+@end deftypefn
+
+
+A summary view of a data set can be generated quickly with the
+@code{statistics} function.
+
+@c statistics scripts/statistics/statistics.m
+@anchor{XREFstatistics}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{stats} =} statistics (@var{x})
+@deftypefnx {} {@var{stats} =} statistics (@var{x}, @var{dim})
+@deftypefnx {} {@var{stats} =} statistics (@var{x}, @var{vecdim})
+@deftypefnx {} {@var{stats} =} statistics (@var{x}, "all")
+@deftypefnx {} {@var{stats} =} statistics (@dots{}, @var{nanflag})
+Return a vector with statistics parameters over the input data @var{x}.
+
+@code{statistics (@var{x}} operates along the first non-singleton dimension
+of @var{x} and calculates the following statistical parameters:
+@enumerate
+@item minimum
+@item first quartile
+@item median
+@item third quartile
+@item maximum
+@item mean
+@item standard deviation
+@item skewness
+@item kurtosis
+@end enumerate
+
+If @var{x} is a row vector, then @code{statistics (@var{x})} returns a row
+vector with the aforementioned statistical parameters.  If @var{x} is a
+column vector, then it returns a column vector.
+
+If @var{x} is a matrix, then @code{statistics (@var{x})} returns a matrix
+such that each column contains the statistical parameters calculated over
+the corresponding column of @var{x}.
+
+If @var{x} is an array, then @code{statistics (@var{x})} computes the
+statistical parameters along the first non-singleton dimension of @var{x}.
+
+The data in @var{x} must be numeric and by default any NaN values are
+ignored from the computations of statistical parameters except for the
+mean and the standard deviation.  Set the optional argument @var{nanflag}
+to @qcode{"omitnan"} to exclude the NaN values from the calculation of
+the mean and standard deviation parameters.  Setting @var{nanflag} to
+@qcode{"includenan"} is ignored and it is equivalent to calling the
+@code{statistics} function without the @var{nanflag} argument.
+
+The size of @var{stats} is equal to the size of @var{x} except for the
+operating dimension, which equals to 9 (i.e., the number of statistical
+parameters returned).
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@code{@var{x}}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{statistics} to
+operate on all elements of @var{x}, and is equivalent to
+@code{statistics (@var{x}(:))}.
+@xseealso{@ref{XREFmin,,min}, @ref{XREFmax,,max}, @ref{XREFmedian,,median}, @ref{XREFmean,,mean}, @ref{XREFstd,,std}, @ref{XREFskewness,,skewness}, @ref{XREFkurtosis,,kurtosis}}
+@end deftypefn
+
+
+@node Statistics on Sliding Windows of Data
+@section Statistics on Sliding Windows of Data
+
+It is often useful to calculate descriptive statistics over a subsection
+(i.e., window) of a full dataset.  Octave provides the function @code{movfun}
+which will call an arbitrary function handle with windows of data and
+accumulate the results.  Many of the most commonly desired functions, such as
+the moving average over a window of data (@code{movmean}), are already
+provided.
+
+@c movfun scripts/signal/movfun.m
+@anchor{XREFmovfun}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} movfun (@var{fcn}, @var{x}, @var{wlen})
+@deftypefnx {} {@var{y} =} movfun (@var{fcn}, @var{x}, [@var{nb}, @var{na}])
+@deftypefnx {} {@var{y} =} movfun (@dots{}, "@var{property}", @var{value})
+
+Apply function @var{fcn} to a moving window of length @var{wlen} on data
+@var{x}.
+
+The moving window length input @var{wlen} can either be a numeric scalar
+or a 2-element numeric array @w{@code{[@var{nb}, @var{na}]}}.  The elements
+included in the moving window depend on the size and value of @var{wlen}
+as well as whether the @qcode{"SamplePoints"} option has been specified.
+For full details of element inclusion,
+@pxref{XREFmovslice,,@code{movslice}}.
+
+During calculations the data input @var{x} is reshaped into a 2-dimensional
+@var{wlen}-by-@var{N} matrix and @var{fcn} is called on this new matrix.
+Therefore, @var{fcn} must accept an array input argument and apply the
+computation along dimension 1, i.e., down the columns of the array.
+
+When applied to an array (possibly multi-dimensional) with @var{n} columns,
+@var{fcn} may return a result in either of two formats: @w{Format 1)}@ an
+array of size 1-by-@var{n}-by-@var{dim3}-by-@dots{}-by-@var{dimN}.  This
+is the typical output format from Octave core functions.  Type
+@code{demo ("movfun", 5)} for an example of this use case.
+@w{Format 2)}@ a row vector of length
+@code{@var{n} * @var{numel_higher_dims}} where @var{numel_higher_dims} is
+@w{@code{prod (size (@var{x})(3:end))}}.  The output of @var{fcn} for the
+i-th input column must be found in the output at indices
+@w{@code{i:@var{n}:(@var{n}*@var{numel_higher_dims})}}.
+This format is useful when concatenating functions into arrays, or when
+using @code{nthargout}.  Type @code{demo ("movfun", 6)} for an example of
+this case.
+
+The calculation can be controlled by specifying @var{property}/@var{value}
+pairs.  Valid properties are
+
+@table @asis
+
+@item @qcode{"dim"}
+Operate along the dimension specified, rather than the default of the first
+non-singleton dimension.
+
+@item @qcode{"SamplePoints"}
+
+This property specifies a sorted, numeric vector of unique coordinate
+positions of the data points in @var{x}.  The default value is the vector
+@w{@code{[1 : @var{numel (x)}]}}.  When a non-default SamplePoints vector
+is specified, the moving window length @var{wlen} is measured
+against the SamplePoints positions to determine which points are
+included in each window slice.  SamplePoints need not be uniformly spaced.
+This can result in window slices containing different numbers of points.
+
+@item @qcode{"Endpoints"}
+
+This property controls how results are calculated at the boundaries
+(@w{endpoints}) of the window.  Possible values are:
+
+@table @asis
+@item @qcode{"shrink"} (default)
+The window is truncated at the beginning and end of the array to exclude
+elements for which there is no source data.  For example, with a window of
+length 3, @code{@var{y}(1) = @var{fcn} (@var{x}(1:2))}, and
+@code{@var{y}(end) = @var{fcn} (@var{x}(end-1:end))}.
+
+@item @qcode{"discard"}
+Any @var{y} values that use a window extending beyond the original
+data array are deleted.  For example, with a 10-element data vector and a
+window of length 3, the output will contain only 8 elements.  The first
+element would require calculating the function over indices
+@w{@code{[0, 1, 2]}}@ and is therefore discarded.  The last element would
+require calculating the function over indices @w{@code{[9, 10, 11]}}@ and is
+therefore discarded.
+
+@item @qcode{"fill"}
+Any window elements outside the data array are replaced by @code{NaN}.  For
+example, with a window of length 3,
+@code{@var{y}(1) = @var{fcn} ([NaN, @var{x}(1:2)])}, and
+@code{@var{y}(end) = @var{fcn} ([@var{x}(end-1:end), NaN])}.
+This option usually results in @var{y} having @code{NaN} values at the
+boundaries, although it is influenced by how @var{fcn} handles @code{NaN},
+and also by the property @qcode{"nancond"}.
+
+@item @var{user_value}
+Any window elements outside the data array are replaced by the specified
+value @var{user_value} which must be a numeric scalar.  For example, with a
+window of length 3,
+@code{@var{y}(1) = @var{fcn} ([@var{user_value}, @var{x}(1:2)])}, and
+@code{@var{y}(end) = @var{fcn} ([@var{x}(end-1:end), @var{user_value}])}.
+A common choice for @var{user_value} is 0.
+
+@item @qcode{"same"}
+Any window elements outside the data array are replaced by the value of
+@var{x} at the boundary.  For example, with a window of length 3,
+@code{@var{y}(1) = @var{fcn} ([@var{x}(1), @var{x}(1:2)])}, and
+@code{@var{y}(end) = @var{fcn} ([@var{x}(end-1:end), @var{x}(end)])}.
+
+@item @qcode{"periodic"}
+The window is wrapped so that any missing data elements are taken from
+the other side of the data.  For example, with a window of length 3,
+@code{@var{y}(1) = @var{fcn} ([@var{x}(end), @var{x}(1:2)])}, and
+@code{@var{y}(end) = @var{fcn} ([@var{x}(end-1:end), @var{x}(1)])}.
+
+@end table
+
+Note 1: For non-uniform SamplePoint spacing, the only permitted value for
+@qcode{"EndPoints"} is @qcode{"shrink"}.
+
+Note 2: For some @qcode{"Endpoints"} options, the window size at the
+boundaries may not be the same as for the central part, and @var{fcn} must
+work in these cases.
+
+@item @qcode{"nancond"}
+Controls haw @code{NaN} and @code{NA} values affect the output of
+@qcode{"movfun"}.  The value @qcode{"includenan"} (default) causes
+@code{NaN} and @code{NA} values to be included in the moving window, and any
+window slice containing @code{NaN} or @code{NA} values will return
+@code{NaN} for that element.  The value @qcode{"omitnan"} causes
+@qcode{"movfun"} to ignore any @code{NaN} or @code{NA} values resulting
+in fewer elements being used to calculate the result for that window
+slice.  If @qcode{"omitnan"} is specified and a window slice contains all
+@code{NaN} or @code{NA} values, @qcode{"movfun"} returns the value
+specified by the @qcode{"nanval"} property for that element.  The values
+@qcode{"includemissing"} and @qcode{"omitmissing"} may be used
+synonymously with @qcode{"includenan"} and @qcode{"omitnan"},
+respectively.
+
+@item @qcode{"nanval"}
+Specifies the value to return when @qcode{"nancond"} is set to
+@qcode{"omitnan"} or @qcode{"omitmissing"} and all elements in a window
+are @code{NaN} or @code{NA}.  @qcode{"nanval"} must be a numeric scalar
+value or @code{NaN} (default).
+
+@item @qcode{"outdim"}
+A row vector that selects which dimensions of the calculation will appear
+in the output @var{y}.  This is only useful when @var{fcn} returns an
+N-dimensional array in @w{Format 1}.  The default is to return all output
+dimensions.
+
+@end table
+
+Programming Note: The property @qcode{"outdim"} can be used to save memory
+when the output of @var{fcn} has many dimensions, or when a wrapper to the
+base function that selects the desired outputs is too costly.  When memory
+is not an issue, the easiest way to select output dimensions is to first
+calculate the complete result with @code{movfun} and then filter that
+result with indexing.  If code complexity is not an issue then a wrapper
+can be created using anonymous functions.  For example, if @code{basefcn}
+is a function returning a @var{K}-dimensional row output, and only
+dimension @var{D} is desired, then the following wrapper could be used.
+
+@example
+@group
+@var{fcn} = @@(x) basefcn (x)(:,columns(x) * (@var{D}-1) + (1:columns(x)));
+@var{y} = movfun (@@fcn, @dots{});
+@end group
+@end example
+
+@xseealso{@ref{XREFmovslice,,movslice}, @ref{XREFprepad,,prepad}, @ref{XREFpostpad,,postpad}, @ref{XREFpermute,,permute}, @ref{XREFreshape,,reshape}}
+@end deftypefn
+
+
+@c movslice scripts/signal/movslice.m
+@anchor{XREFmovslice}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{slcidx} =} movslice (@var{N}, @var{wlen})
+@deftypefnx {} {@var{slcidx} =} movslice (@var{N}, @var{wlen}, @var{samplepoints})
+@deftypefnx {} {[@var{slcidx}, @var{C}, @var{Cpre}, @var{Cpost}, @var{win}, @var{wlen}, @var{scalar_wlen}] =} movslice (@dots{})
+Generate indices to slice a vector of length @var{N} into windows of length
+@var{wlen}.
+
+The input @var{N} must be a positive integer.
+
+The moving window length input @var{wlen} can either be a numeric scalar
+or a 2-element numeric array.  The elements included in the moving window
+will depend on the size and value of @var{wlen} as well as whether the
+@var{samplepoints} input was specified.
+
+The optional input @var{samplepoints} is a sorted, numeric vector of unique
+positions of the @var{N} data points.  The default value is the vector
+@code{[1 : @var{N}]}.  When a non-default @var{samplepoints} vector is
+specified, the moving window length @var{wlen} is measured
+against the @var{samplepoints} positions to determine which points are
+included in each window slice.  It should be noted that @var{samplepoints}
+need not be uniformly spaced which can result in window slices containing
+different numbers of points.  Because of this, as specified below the
+shape and content of some @code{movslice} outputs will be different when
+a non-default @var{samplepoints} is used.
+
+The moving window size and included elements will be defined as follows:
+
+@itemize
+@item
+If @var{samplepoints} has the default value of @code{1:@var{N}} (or has
+not been specified):
+
+@itemize
+@item
+For integer-valued @var{wlen}:
+
+@itemize
+@item
+For odd, integer-valued, scalar @var{wlen} the window is symmetric and
+includes @w{@code{(@var{wlen} - 1) / 2}}@ elements on either side of the
+central element.  For example, the window slice at index 5 with a window
+length of 3 will include the elements @w{@code{[4, 5, 6]}}.
+
+@item
+For even, integer-valued, scalar @var{wlen} the window is asymmetric and
+has @w{@code{@var{wlen}/2}}@ elements to the left of the central element
+and @w{@code{@var{wlen}/2 - 1}}@ elements to the right of the central
+element.  For example, the window slice at index 5 with a window length of
+4 will include the elements @w{@code{[3, 4, 5, 6]}}.
+
+@item
+For integer-valued vector @var{wlen} of the form
+@w{@code{[@var{nb}, @var{na}]}}@ where @var{nb} and @var{na} are integer
+valued the window includes @var{nb} elements to the left of the central
+element and @var{na} elements to the right of the central element.  For
+example, given @w{@code{@var{wlen} = [3, 1]}}, the window slice at index 5
+will include the elements @w{@code{[2, 3, 4, 5, 6]}}.
+@end itemize
+
+@item
+For non-integer-valued scalar @var{wlen}:
+
+@itemize
+@item
+Non-integer-valued scalar @var{wlen} will be converted to
+two-element vector form with
+@w{@code{@var{nb} = @var{na} = fix (@var{wlen} / 2)}}, and then processed
+as stated above for integer-valued vectors.  For example, the window slice
+at index 5 with @w{@code{@var{wlen} = 2.5}}@ will include the elements
+@w{@code{[3, 4, 5, 6, 7]}}.
+
+@item
+Non-integer-valued vector @var{wlen} will be truncated to integer values
+with @w{@code{@var{wlen} = fix (@var{wlen})}}@ and then processed as
+stated above for integer-valued vectors.  For example, the window slice
+at index 5 with @w{@code{@var{wlen} = [1.2, 2.3]}}@ will include the
+elements @w{@code{[4, 5, 6, 7]}}.
+@end itemize
+@end itemize
+
+@item
+If @var{samplepoints} has been specified with a non-default vector:
+
+@itemize
+@item
+For vector @var{wlen} specified as @w{@code{[@var{nb}, @var{na}]}}, the
+window will include all points within a distance less than or equal to
+@var{nb} before and @var{na} after the central element's position, with
+point positions defined by the elements of @var{samplepoints}.  For
+example, at index 5 with @w{@code{@var{wlen} = [2, 3]}}@ and the 3rd-8th
+elements of @var{samplepoints} being @w{@code{[1, 3, 5, 7, 8 ,9]}}, the
+window slice will include the elements @w{@code{[4, 5, 6, 7]}}@
+corresponding to @var{samplepoints} @w{@code{[3, 5, 7, 8]}}.
+
+@item
+Scalar @var{wlen} will be converted to two-element vector form with
+@w{@code{@var{nb} = @var{na} = @var{wlen} / 2}}.  The window will then
+include all points within a distance of less than or equal to @var{nb}
+before and less than, but not equal to, @var{na} after the central
+element's position, @w{@code{[@var{nb}, @var{na})}}.  For example, at
+index 5 with @w{@code{@var{wlen} = [2, 3]}}@ and the 3rd-8th elements of
+@var{samplepoints} being @w{@code{[1, 3, 5, 7, 8 ,9]}}, the window slice
+will include the elements @w{@code{[4, 5, 6]}}@ corresponding to
+@var{samplepoints} @w{@code{[3, 5, 7]}}.
+@end itemize
+@end itemize
+
+The output @var{slcidx} is an array of indices of the slices of the vector.
+
+@itemize
+@item
+If @var{samplepoints} is default or unspecified, @var{slcidx} will contain
+only the indices of the slices that fit fully within the vector.  Each
+column will be the indices of one slice as the window moves from left to
+right.  The slices will have @w{@code{fix (@var{wlen})}}@ elements for
+scalar @var{wlen}, or @w{@code{@var{nb} + @var{na} + 1}}@ elements for array
+valued @var{wlen}.
+
+@item
+If a non-default @var{samplepoints} has been specified, @var{slcidx} will
+be a 2x@var{N} array with the first and second rows containing the first
+and last elements of each slice, respectively.
+@end itemize
+
+Optional output @var{C} is a row vector of window center positions where
+the window stays fully within the vector.
+
+Optional outputs @var{Cpre} and @var{Cpost} contain the vector elements at
+the start and end of the vector, respectively, that result in the window
+extending beyond the ends of the vector.
+
+Optional output @var{win} contains information for creating the moving
+window.
+
+@itemize
+@item
+If @var{samplepoints} is default or unspecified, @var{win} is a column
+vector with the same number of rows as @var{slcidx} that contains the
+moving window defined as a center relative position stencil.
+
+@item
+If a non-default @var{samplepoints} has been specified, @var{win} will
+be a 2x@var{N} array with the first and second rows containing the left and
+right bounds of each window slice, respectively, using the same
+coordinates as @var{samplepoints}.  These bounds may lie outside of the
+position vector specified by @var{samplepoints}.
+@end itemize
+
+Optional output @var{wlen} returns the window length used by
+@code{movslice} in two-element @w{@code{[@var{nb}, @var{na}]}}@ form.
+
+Optional logical output @var{scalar_wlen} returns the scalar or vector
+state of the input @var{wlen} so that calling functions can determinine
+whether the moving window should be inclusive or exclusive of the right
+window endpoints.  I.e., inclusive @w{@code{[@var{nb}, @var{na}]}}@ for
+vector @var{wlen} or exclusive @w{@code{[@var{nb}, @var{na})}}@ for scalar
+@var{wlen}.
+
+@xseealso{@ref{XREFmovfun,,movfun}}
+@end deftypefn
+
+
+@c movmad scripts/statistics/movmad.m
+@anchor{XREFmovmad}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} movmad (@var{x}, @var{wlen})
+@deftypefnx {} {@var{y} =} movmad (@var{x}, [@var{nb}, @var{na}])
+@deftypefnx {} {@var{y} =} movmad (@dots{}, @var{dim})
+@deftypefnx {} {@var{y} =} movmad (@dots{}, @var{nancond})
+@deftypefnx {} {@var{y} =} movmad (@dots{}, @var{property}, @var{value})
+Calculate the moving median or mean absolute deviation over a sliding
+window of length @var{wlen} on data @var{x}.
+
+The moving window length input @var{wlen} can either be a numeric scalar
+or a 2-element numeric array @w{@code{[@var{nb}, @var{na}]}}.  The elements
+included in the moving window depend on the size and value of @var{wlen}
+as well as whether the @qcode{"SamplePoints"} option has been specified.
+For full details of element inclusion,
+@pxref{XREFmovslice,,@code{movslice}}.
+
+If the optional argument @var{dim} is given, operate along this dimension.
+
+The optional argument @var{nancond} is a string that controls how @code{NaN}
+and @code{NA} values affect the output of @qcode{"movmad"}.  The value
+@qcode{"includenan"} causes @code{NaN} and @code{NA} values to be included
+in the moving window, and any window slice containing @code{NaN} or
+@code{NA} values will return @code{NaN} for that element.  The value
+@qcode{"omitnan"} (default) causes @qcode{"movmad"} to ignore any @code{NaN}
+or @code{NA} values resulting in fewer elements being used to calculate the
+mad for that window slice.  If @qcode{"omitnan"} is specified and a window
+slice contains all @code{NaN} or @code{NA} values, @qcode{"movmad"} returns
+@code{NaN} for that element.  The values @qcode{"includemissing"} and
+@qcode{"omitmissing"} may be used synonymously with @qcode{"includenan"} and
+@qcode{"omitnan"}, respectively.
+
+The calculation can be controlled by specifying @var{property}/@var{value}
+pairs:
+
+@itemize
+@item
+The @qcode{"method"} property can take the value @qcode{"median"} (default)
+or @qcode{"mean"} to control whether @qcode{"movmad"} performs median or
+mean absolute deviation calculations on the data.
+
+@item
+Additional valid properties are @qcode{"Endpoints"} and
+@qcode{"SamplePoints"}.  For full descriptions of these properties and valid
+options, @pxref{XREFmovfun,,@code{movfun}}.
+@end itemize
+
+Programming Note: This function is a wrapper which calls @code{movfun}.  For
+full documentation of inputs and options, @pxref{XREFmovfun,,@code{movfun}}.
+
+Compatibility Note: Prior to Octave 10 this function only calculated mean
+absolute deviation.  For @sc{matlab} compatibility, the default has been
+changed to median absolute deviation.  The @qcode{"method"} property is now
+provided to enable access to both @qcode{"mad"} calculation methods.  This
+property should not be expected to be functional outside of Octave code.
+
+@xseealso{@ref{XREFmad,,mad}, @ref{XREFmovfun,,movfun}, @ref{XREFmovslice,,movslice}, @ref{XREFmovmax,,movmax}, @ref{XREFmovmean,,movmean}, @ref{XREFmovmedian,,movmedian}, @ref{XREFmovmin,,movmin}, @ref{XREFmovprod,,movprod}, @ref{XREFmovstd,,movstd}, @ref{XREFmovsum,,movsum}, @ref{XREFmovvar,,movvar}}
+@end deftypefn
+
+
+@c movmax scripts/statistics/movmax.m
+@anchor{XREFmovmax}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} movmax (@var{x}, @var{wlen})
+@deftypefnx {} {@var{y} =} movmax (@var{x}, [@var{nb}, @var{na}])
+@deftypefnx {} {@var{y} =} movmax (@dots{}, @var{dim})
+@deftypefnx {} {@var{y} =} movmax (@dots{}, @var{nancond})
+@deftypefnx {} {@var{y} =} movmax (@dots{}, @var{property}, @var{value})
+Calculate the moving maximum over a sliding window of length @var{wlen} on
+data @var{x}.
+
+The moving window length input @var{wlen} can either be a numeric scalar
+or a 2-element numeric array @w{@code{[@var{nb}, @var{na}]}}.  The elements
+included in the moving window depend on the size and value of @var{wlen}
+as well as whether the @qcode{"SamplePoints"} option has been specified.
+For full details of element inclusion,
+@pxref{XREFmovslice,,@code{movslice}}.
+
+If the optional argument @var{dim} is given, operate along this dimension.
+
+The optional argument @var{nancond} is a string that controls how @code{NaN}
+and @code{NA} values affect the output of @qcode{"movmax"}.  The value
+@qcode{"includenan"} causes @code{NaN} and @code{NA} values to be
+included in the moving window, and any window slice containing @code{NaN} or
+@code{NA} values will return @code{NaN} for that element.  The value
+@qcode{"omitnan"} (default) causes @qcode{"movmax"} to ignore any @code{NaN}
+or @code{NA} values resulting in fewer elements being used to calculate the
+maximum for that window slice.  If @qcode{"omitnan"} is specified and a
+window slice contains all @code{NaN} or @code{NA} values, @qcode{"movmax"}
+returns @code{NaN} for that element.  The values @qcode{"includemissing"}
+and @qcode{"omitmissing"} may be used synonymously with
+@qcode{"includenan"} and @qcode{"omitnan"}, respectively.
+
+The calculation can be controlled by specifying @var{property}/@var{value}
+pairs.  Valid properties are @qcode{"Endpoints"} and
+@qcode{"SamplePoints"}.  For full descriptions of these properties and
+valid options, @pxref{XREFmovfun,,@code{movfun}}.
+
+Programming Note: This function is a wrapper which calls @code{movfun}.
+For full documentation of inputs and options,
+@pxref{XREFmovfun,,@code{movfun}}.
+
+@xseealso{@ref{XREFmax,,max}, @ref{XREFmovfun,,movfun}, @ref{XREFmovslice,,movslice}, @ref{XREFmovmad,,movmad}, @ref{XREFmovmean,,movmean}, @ref{XREFmovmedian,,movmedian}, @ref{XREFmovmin,,movmin}, @ref{XREFmovprod,,movprod}, @ref{XREFmovstd,,movstd}, @ref{XREFmovsum,,movsum}, @ref{XREFmovvar,,movvar}}
+@end deftypefn
+
+
+@c movmean scripts/statistics/movmean.m
+@anchor{XREFmovmean}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} movmean (@var{x}, @var{wlen})
+@deftypefnx {} {@var{y} =} movmean (@var{x}, [@var{nb}, @var{na}])
+@deftypefnx {} {@var{y} =} movmean (@dots{}, @var{dim})
+@deftypefnx {} {@var{y} =} movmean (@dots{}, @var{nancond})
+@deftypefnx {} {@var{y} =} movmean (@dots{}, @var{property}, @var{value})
+Calculate the moving average over a sliding window of length @var{wlen} on
+data @var{x}.
+
+The moving window length input @var{wlen} can either be a numeric scalar
+or a 2-element numeric array @w{@code{[@var{nb}, @var{na}]}}.  The elements
+included in the moving window depend on the size and value of @var{wlen}
+as well as whether the @qcode{"SamplePoints"} option has been specified.
+For full details of element inclusion,
+@pxref{XREFmovslice,,@code{movslice}}.
+
+If the optional argument @var{dim} is given, operate along this dimension.
+
+The optional argument @var{nancond} is a string that controls how @code{NaN}
+and @code{NA} values affect the output of @qcode{"movmean"}.  The value
+@qcode{"includenan"} (default) causes @code{NaN} and @code{NA} values to be
+included in the moving window, and any window slice containing @code{NaN} or
+@code{NA} values will return @code{NaN} for that element.  The value
+@qcode{"omitnan"} causes @qcode{"movmean"} to ignore any @code{NaN}
+or @code{NA} values resulting in fewer elements being used to calculate the
+mean for that window slice.  If @qcode{"omitnan"} is specified and a window
+slice contains all @code{NaN} or @code{NA} values, @qcode{"movmean"} returns
+@code{NaN} for that element.  The values @qcode{"includemissing"} and
+@qcode{"omitmissing"} may be used synonymously with @qcode{"includenan"} and
+@qcode{"omitnan"}, respectively.
+
+The calculation can be controlled by specifying @var{property}/@var{value}
+pairs.  Valid properties are @qcode{"Endpoints"} and
+@qcode{"SamplePoints"}.  For full descriptions of these properties and
+valid options, @pxref{XREFmovfun,,@code{movfun}}.
+
+Programming Note: This function is a wrapper which calls @code{movfun}.
+For full documentation of inputs and options,
+@pxref{XREFmovfun,,@code{movfun}}.
+
+@xseealso{@ref{XREFmean,,mean}, @ref{XREFmovfun,,movfun}, @ref{XREFmovslice,,movslice}, @ref{XREFmovmad,,movmad}, @ref{XREFmovmax,,movmax}, @ref{XREFmovmedian,,movmedian}, @ref{XREFmovmin,,movmin}, @ref{XREFmovprod,,movprod}, @ref{XREFmovstd,,movstd}, @ref{XREFmovsum,,movsum}, @ref{XREFmovvar,,movvar}}
+@end deftypefn
+
+
+@c movmedian scripts/statistics/movmedian.m
+@anchor{XREFmovmedian}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} movmedian (@var{x}, @var{wlen})
+@deftypefnx {} {@var{y} =} movmedian (@var{x}, [@var{nb}, @var{na}])
+@deftypefnx {} {@var{y} =} movmedian (@dots{}, @var{dim})
+@deftypefnx {} {@var{y} =} movmedian (@dots{}, @var{nancond})
+@deftypefnx {} {@var{y} =} movmedian (@dots{}, @var{property}, @var{value})
+Calculate the moving median over a sliding window of length @var{wlen} on
+data @var{x}.
+
+The moving window length input @var{wlen} can either be a numeric scalar
+or a 2-element numeric array @w{@code{[@var{nb}, @var{na}]}}.  The elements
+included in the moving window depend on the size and value of @var{wlen}
+as well as whether the @qcode{"SamplePoints"} option has been specified.
+For full details of element inclusion,
+@pxref{XREFmovslice,,@code{movslice}}.
+
+If the optional argument @var{dim} is given, operate along this dimension.
+
+The optional argument @var{nancond} is a string that controls how @code{NaN}
+and @code{NA} values affect the output of @qcode{"movmedian"}.  The value
+@qcode{"includenan"} (default) causes @code{NaN} and @code{NA} values to be
+included in the moving window, and any window slice containing @code{NaN} or
+@code{NA} values will return @code{NaN} for that element.  The value
+@qcode{"omitnan"} causes @qcode{"movmedian"} to ignore any @code{NaN}
+or @code{NA} values resulting in fewer elements being used to calculate the
+median for that window slice.  If @qcode{"omitnan"} is specified and a
+window slice contains all @code{NaN} or @code{NA} values,
+@qcode{"movmedian"} returns @code{NaN} for that element.  The values
+@qcode{"includemissing"} and @qcode{"omitmissing"} may be used
+synonymously with @qcode{"includenan"} and @qcode{"omitnan"},
+respectively.
+
+The calculation can be controlled by specifying @var{property}/@var{value}
+pairs.  Valid properties are @qcode{"Endpoints"} and
+@qcode{"SamplePoints"}.  For full descriptions of these properties and
+valid options, @pxref{XREFmovfun,,@code{movfun}}.
+
+Programming Note: This function is a wrapper which calls @code{movfun}.
+For full documentation of inputs and options,
+@pxref{XREFmovfun,,@code{movfun}}.
+
+@xseealso{@ref{XREFmedian,,median}, @ref{XREFmovfun,,movfun}, @ref{XREFmovslice,,movslice}, @ref{XREFmovmad,,movmad}, @ref{XREFmovmax,,movmax}, @ref{XREFmovmean,,movmean}, @ref{XREFmovmin,,movmin}, @ref{XREFmovprod,,movprod}, @ref{XREFmovstd,,movstd}, @ref{XREFmovsum,,movsum}, @ref{XREFmovvar,,movvar}}
+@end deftypefn
+
+
+@c movmin scripts/statistics/movmin.m
+@anchor{XREFmovmin}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} movmin (@var{x}, @var{wlen})
+@deftypefnx {} {@var{y} =} movmin (@var{x}, [@var{nb}, @var{na}])
+@deftypefnx {} {@var{y} =} movmin (@dots{}, @var{dim})
+@deftypefnx {} {@var{y} =} movmin (@dots{}, @var{nancond})
+@deftypefnx {} {@var{y} =} movmin (@dots{}, @var{property}, @var{value})
+Calculate the moving minimum over a sliding window of length @var{wlen} on
+data @var{x}.
+
+The moving window length input @var{wlen} can either be a numeric scalar
+or a 2-element numeric array @w{@code{[@var{nb}, @var{na}]}}.  The elements
+included in the moving window depend on the size and value of @var{wlen}
+as well as whether the @qcode{"SamplePoints"} option has been specified.
+For full details of element inclusion,
+@pxref{XREFmovslice,,@code{movslice}}.
+
+If the optional argument @var{dim} is given, operate along this dimension.
+
+The optional argument @var{nancond} is a string that controls how @code{NaN}
+and @code{NA} values affect the output of @qcode{"movmin"}.  The value
+@qcode{"includenan"} causes @code{NaN} and @code{NA} values to be
+included in the moving window, and any window slice containing @code{NaN} or
+@code{NA} values will return @code{NaN} for that element.  The value
+@qcode{"omitnan"} (default) causes @qcode{"movmin"} to ignore any @code{NaN}
+or @code{NA} values resulting in fewer elements being used to calculate the
+minimum for that window slice.  If @qcode{"omitnan"} is specified and a
+window slice contains all @code{NaN} or @code{NA} values, @qcode{"movmin"}
+returns @code{NaN} for that element.  The values @qcode{"includemissing"}
+and @qcode{"omitmissing"} may be used synonymously with
+@qcode{"includenan"} and @qcode{"omitnan"}, respectively.
+
+The calculation can be controlled by specifying @var{property}/@var{value}
+pairs.  Valid properties are @qcode{"Endpoints"} and
+@qcode{"SamplePoints"}.  For full descriptions of these properties and
+valid options, @pxref{XREFmovfun,,@code{movfun}}.
+
+Programming Note: This function is a wrapper which calls @code{movfun}.
+For full documentation of inputs and options,
+@pxref{XREFmovfun,,@code{movfun}}.
+
+@xseealso{@ref{XREFmin,,min}, @ref{XREFmovfun,,movfun}, @ref{XREFmovslice,,movslice}, @ref{XREFmovmad,,movmad}, @ref{XREFmovmax,,movmax}, @ref{XREFmovmean,,movmean}, @ref{XREFmovmedian,,movmedian}, @ref{XREFmovprod,,movprod}, @ref{XREFmovstd,,movstd}, @ref{XREFmovsum,,movsum}, @ref{XREFmovvar,,movvar}}
+@end deftypefn
+
+
+@c movprod scripts/statistics/movprod.m
+@anchor{XREFmovprod}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} movprod (@var{x}, @var{wlen})
+@deftypefnx {} {@var{y} =} movprod (@var{x}, [@var{nb}, @var{na}])
+@deftypefnx {} {@var{y} =} movprod (@dots{}, @var{dim})
+@deftypefnx {} {@var{y} =} movprod (@dots{}, @var{nancond})
+@deftypefnx {} {@var{y} =} movprod (@dots{}, @var{property}, @var{value})
+Calculate the moving product over a sliding window of length @var{wlen} on
+data @var{x}.
+
+The moving window length input @var{wlen} can either be a numeric scalar
+or a 2-element numeric array @w{@code{[@var{nb}, @var{na}]}}.  The elements
+included in the moving window depend on the size and value of @var{wlen}
+as well as whether the @qcode{"SamplePoints"} option has been specified.
+For full details of element inclusion,
+@pxref{XREFmovslice,,@code{movslice}}.
+
+If the optional argument @var{dim} is given, operate along this dimension.
+
+The optional argument @var{nancond} is a string that controls how @code{NaN}
+and @code{NA} values affect the output of @qcode{"movprod"}.  The value
+@qcode{"includenan"} (default) causes @code{NaN} and @code{NA} values to be
+included in the moving window, and any window slice containing @code{NaN} or
+@code{NA} values will return @code{NaN} for that element.  The value
+@qcode{"omitnan"} causes @qcode{"movprod"} to ignore any @code{NaN}
+or @code{NA} values resulting in fewer elements being used to calculate the
+product for that window slice.  If @qcode{"omitnan"} is specified and a
+window slice contains all @code{NaN} or @code{NA} values, @qcode{"movprod"}
+returns 1 for that element.  The values @qcode{"includemissing"} and
+@qcode{"omitmissing"} may be used synonymously with @qcode{"includenan"} and
+@qcode{"omitnan"}, respectively.
+
+The calculation can be controlled by specifying @var{property}/@var{value}
+pairs.  Valid properties are @qcode{"Endpoints"} and
+@qcode{"SamplePoints"}.  For full descriptions of these properties and
+valid options, @pxref{XREFmovfun,,@code{movfun}}.
+
+Programming Note: This function is a wrapper which calls @code{movfun}.
+For full documentation of inputs and options,
+@pxref{XREFmovfun,,@code{movfun}}.
+
+@xseealso{@ref{XREFprod,,prod}, @ref{XREFmovfun,,movfun}, @ref{XREFmovslice,,movslice}, @ref{XREFmovmad,,movmad}, @ref{XREFmovmax,,movmax}, @ref{XREFmovmean,,movmean}, @ref{XREFmovmedian,,movmedian}, @ref{XREFmovmin,,movmin}, @ref{XREFmovstd,,movstd}, @ref{XREFmovsum,,movsum}, @ref{XREFmovvar,,movvar}}
+@end deftypefn
+
+
+@c movstd scripts/statistics/movstd.m
+@anchor{XREFmovstd}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} movstd (@var{x}, @var{wlen})
+@deftypefnx {} {@var{y} =} movstd (@var{x}, [@var{nb}, @var{na}])
+@deftypefnx {} {@var{y} =} movstd (@dots{}, @var{opt})
+@deftypefnx {} {@var{y} =} movstd (@dots{}, @var{opt}, @var{dim})
+@deftypefnx {} {@var{y} =} movstd (@dots{}, @var{nancond})
+@deftypefnx {} {@var{y} =} movstd (@dots{}, @var{property}, @var{value})
+Calculate the moving standard deviation over a sliding window of length
+@var{wlen} on data @var{x}.
+
+The moving window length input @var{wlen} can either be a numeric scalar
+or a 2-element numeric array @w{@code{[@var{nb}, @var{na}]}}.  The elements
+included in the moving window depend on the size and value of @var{wlen}
+as well as whether the @qcode{"SamplePoints"} option has been specified.
+For full details of element inclusion,
+@pxref{XREFmovslice,,@code{movslice}}.
+
+The optional argument @var{opt} determines the type of normalization to use.
+Valid values are
+
+@table @asis
+@item 0:
+  normalize with @math{N-1}, provides the square root of the best unbiased
+estimator of the variance [default]
+
+@item 1:
+  normalize with @math{N}, this provides the square root of the second
+moment around the mean
+@end table
+
+If the optional argument @var{dim} is given, operate along this dimension.
+The normalization argument @var{opt} must be given before the dimension.
+To use the default value for @var{opt} you may pass an empty input
+argument @code{[]}.
+
+The optional argument @var{nancond} is a string that controls how @code{NaN}
+and @code{NA} values affect the output of @qcode{"movstd"}.  The value
+@qcode{"includenan"} (default) causes @code{NaN} and @code{NA} values to be
+included in the moving window, and any window slice containing @code{NaN} or
+@code{NA} values will return @code{NaN} for that element.  The value
+@qcode{"omitnan"} causes @qcode{"movstd"} to ignore any @code{NaN}
+or @code{NA} values resulting in fewer elements being used to calculate the
+standard deviation for that window slice.  If @qcode{"omitnan"} is specified
+and a window slice contains all @code{NaN} or @code{NA} values,
+@qcode{"movstd"} returns @code{NaN} for that element.  The values
+@qcode{"includemissing"} and @qcode{"omitmissing"} may be used synonymously
+with @qcode{"includenan"} and @qcode{"omitnan"}, respectively.
+
+The calculation can be controlled by specifying @var{property}/@var{value}
+pairs.  Valid properties are @qcode{"Endpoints"} and
+@qcode{"SamplePoints"}.  For full descriptions of these properties and
+valid options, @pxref{XREFmovfun,,@code{movfun}}.
+
+Programming Note: This function is a wrapper which calls @code{movfun}.
+For full documentation of inputs and options,
+@pxref{XREFmovfun,,@code{movfun}}.
+
+@xseealso{@ref{XREFstd,,std}, @ref{XREFmovfun,,movfun}, @ref{XREFmovslice,,movslice}, @ref{XREFmovmad,,movmad}, @ref{XREFmovmax,,movmax}, @ref{XREFmovmean,,movmean}, @ref{XREFmovmedian,,movmedian}, @ref{XREFmovmin,,movmin}, @ref{XREFmovprod,,movprod}, @ref{XREFmovsum,,movsum}, @ref{XREFmovvar,,movvar}}
+@end deftypefn
+
+
+@c movsum scripts/statistics/movsum.m
+@anchor{XREFmovsum}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} movsum (@var{x}, @var{wlen})
+@deftypefnx {} {@var{y} =} movsum (@var{x}, [@var{nb}, @var{na}])
+@deftypefnx {} {@var{y} =} movsum (@dots{}, @var{dim})
+@deftypefnx {} {@var{y} =} movsum (@dots{}, @var{nancond})
+@deftypefnx {} {@var{y} =} movsum (@dots{}, @var{property}, @var{value})
+Calculate the moving sum over a sliding window of length @var{wlen} on
+data @var{x}.
+
+The moving window length input @var{wlen} can either be a numeric scalar
+or a 2-element numeric array @w{@code{[@var{nb}, @var{na}]}}.  The elements
+included in the moving window depend on the size and value of @var{wlen}
+as well as whether the @qcode{"SamplePoints"} option has been specified.
+For full details of element inclusion,
+@pxref{XREFmovslice,,@code{movslice}}.
+
+If the optional argument @var{dim} is given, operate along this dimension.
+
+The optional argument @var{nancond} is a string that controls how @code{NaN}
+and @code{NA} values affect the output of @qcode{"movsum"}.  The value
+@qcode{"includenan"} (default) causes @code{NaN} and @code{NA} values to be
+included in the moving window, and any window slice containing @code{NaN} or
+@code{NA} values will return @code{NaN} for that element.  The value
+@qcode{"omitnan"} causes @qcode{"movsum"} to ignore any @code{NaN}
+or @code{NA} values resulting in fewer elements being used to calculate the
+sum for that window slice.  If @qcode{"omitnan"} is specified and a window
+slice contains all @code{NaN} or @code{NA} values, @qcode{"movsum"} returns
+0 for that element.  The values @qcode{"includemissing"} and
+@qcode{"omitmissing"} may be used synonymously with @qcode{"includenan"} and
+@qcode{"omitnan"}, respectively.
+
+The calculation can be controlled by specifying @var{property}/@var{value}
+pairs.  Valid properties are @qcode{"Endpoints"} and
+@qcode{"SamplePoints"}.  For full descriptions of these properties and
+valid options, @pxref{XREFmovfun,,@code{movfun}}.
+
+Programming Note: This function is a wrapper which calls @code{movfun}.
+For full documentation of inputs and options,
+@pxref{XREFmovfun,,@code{movfun}}.
+
+@xseealso{@ref{XREFsum,,sum}, @ref{XREFmovfun,,movfun}, @ref{XREFmovslice,,movslice}, @ref{XREFmovmad,,movmad}, @ref{XREFmovmax,,movmax}, @ref{XREFmovmean,,movmean}, @ref{XREFmovmedian,,movmedian}, @ref{XREFmovmin,,movmin}, @ref{XREFmovprod,,movprod}, @ref{XREFmovstd,,movstd}, @ref{XREFmovvar,,movvar}}
+@end deftypefn
+
+
+@c movvar scripts/statistics/movvar.m
+@anchor{XREFmovvar}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} movvar (@var{x}, @var{wlen})
+@deftypefnx {} {@var{y} =} movvar (@var{x}, [@var{nb}, @var{na}])
+@deftypefnx {} {@var{y} =} movvar (@dots{}, @var{opt})
+@deftypefnx {} {@var{y} =} movvar (@dots{}, @var{opt}, @var{dim})
+@deftypefnx {} {@var{y} =} movvar (@dots{}, @var{nancond})
+@deftypefnx {} {@var{y} =} movvar (@dots{}, @var{property}, @var{value})
+Calculate the moving variance over a sliding window of length @var{wlen} on
+data @var{x}.
+
+
+The moving window length input @var{wlen} can either be a numeric scalar
+or a 2-element numeric array @w{@code{[@var{nb}, @var{na}]}}.  The elements
+included in the moving window depend on the size and value of @var{wlen}
+as well as whether the @qcode{"SamplePoints"} option has been specified.
+For full details of element inclusion,
+@pxref{XREFmovslice,,@code{movslice}}.
+
+The optional argument @var{opt} determines the type of normalization to use.
+Valid values are:
+
+@table @asis
+@item 0:
+  normalize with @math{N-1}, provides the best unbiased estimator of the
+variance [default]
+
+@item 1:
+  normalizes with @math{N}, this provides the second moment around the mean
+@end table
+
+If the optional argument @var{dim} is given, operate along this dimension.
+The normalization argument @var{opt} must be given before the dimension.
+To use the default value for @var{opt} you may pass an empty input
+argument @code{[]}.
+
+The optional argument @var{nancond} is a string that controls how @code{NaN}
+and @code{NA} values affect the output of @qcode{"movvar"}.  The value
+@qcode{"includenan"} (default) causes @code{NaN} and @code{NA} values to be
+included in the moving window, and any window slice containing @code{NaN} or
+@code{NA} values will return @code{NaN} for that element.  The value
+@qcode{"omitnan"} causes @qcode{"movvar"} to ignore any @code{NaN}
+or @code{NA} values resulting in fewer elements being used to calculate the
+variance for that window slice.  If @qcode{"omitnan"} is specified and a
+window slice contains all @code{NaN} or @code{NA} values, @qcode{"movvar"}
+returns @code{NaN} for that element.  The values @qcode{"includemissing"}
+and @qcode{"omitmissing"} may be used synonymously with
+@qcode{"includenan"} and @qcode{"omitnan"}, respectively.
+
+The calculation can be controlled by specifying @var{property}/@var{value}
+pairs.  Valid properties are @qcode{"Endpoints"} and
+@qcode{"SamplePoints"}.  For full descriptions of these properties and
+valid options, @pxref{XREFmovfun,,@code{movfun}}.
+
+Programming Note: This function is a wrapper which calls @code{movfun}.
+For full documentation of inputs and options,
+@pxref{XREFmovfun,,@code{movfun}}.
+
+@xseealso{@ref{XREFvar,,var}, @ref{XREFmovfun,,movfun}, @ref{XREFmovslice,,movslice}, @ref{XREFmovmad,,movmad}, @ref{XREFmovmax,,movmax}, @ref{XREFmovmean,,movmean}, @ref{XREFmovmedian,,movmedian}, @ref{XREFmovmin,,movmin}, @ref{XREFmovprod,,movprod}, @ref{XREFmovstd,,movstd}, @ref{XREFmovsum,,movsum}}
+@end deftypefn
+
+
+@node Basic Statistical Functions
+@section Basic Statistical Functions
+
+Octave supports various helpful statistical functions.  Many are useful as
+initial steps to prepare a data set for further analysis.  Others provide
+different measures from those of the basic descriptive statistics.
+
+@c center scripts/statistics/center.m
+@anchor{XREFcenter}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} center (@var{x})
+@deftypefnx {} {@var{y} =} center (@var{x}, @var{dim})
+@deftypefnx {} {@var{y} =} center (@var{x}, @var{vecdim})
+@deftypefnx {} {@var{y} =} center (@var{x}, "all")
+@deftypefnx {} {@var{y} =} center (@dots{}, @var{nanflag})
+Center data by subtracting its mean.
+
+If @var{x} is a vector, then @code{center (@var{x})} computes the centered
+data by subtracting the mean of @var{x} from each element of @var{x}.
+
+If @var{x} is a matrix, then @code{center (@var{x})} returns a row vector
+with each element containing the centered data for each column of @var{x}.
+
+If @var{x} is an array, then @code{center (@var{x})} centers the data alonng
+the first non-singleton dimension of @var{x}.
+
+The data in @var{x} must be numeric.  The size of @var{y} is equal to the
+size of @var{x}.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@code{@var{x}}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{center} to
+compute the center of all elements of @var{x}, and is equivalent to
+@code{center (@var{x}(:))}.
+
+The optional variable @var{nanflag} specifies whether to include or exclude
+NaN values from the calculation of the mean using any of the previously
+specified input argument combinations.  The default value for @var{nanflag}
+is @qcode{"includenan"} which keeps NaN values in the calculation.  To
+exclude NaN values set the value of @var{nanflag} to @qcode{"omitnan"}.  Any
+NaN value along the operating dimensions will result in all corresponding
+element in @var{y} being NaN.
+
+Programming Note: @code{center} has obvious application for normalizing
+statistical data.  It is also useful for improving the precision of general
+numerical calculations.  Whenever there is a large value that is common
+to a batch of data, the mean can be subtracted off, the calculation
+performed, and then the mean added back to obtain the final answer.
+@xseealso{@ref{XREFzscore,,zscore}}
+@end deftypefn
+
+
+@c zscore scripts/statistics/zscore.m
+@anchor{XREFzscore}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{z} =} zscore (@var{x})
+@deftypefnx {} {@var{z} =} zscore (@var{x}, @var{opt})
+@deftypefnx {} {@var{z} =} zscore (@var{x}, @var{opt}, @var{dim})
+@deftypefnx {} {@var{z} =} zscore (@var{x}, @var{opt}, @var{vecdim})
+@deftypefnx {} {@var{z} =} zscore (@var{x}, @var{opt}, "all")
+@deftypefnx {} {@var{z} =} zscore (@dots{}, @var{nanflag})
+@deftypefnx {} {[@var{z}, @var{mu}, @var{sigma}] =} zscore (@dots{})
+Compute the z-score of @var{x}.
+
+@c FIXME: Document mathematical definition as a formula, not just text.
+For a vector @var{x}, the z-score is calculated by subtracting the mean
+and dividing by its standard deviation.  If the standard deviation is zero,
+then divide by 1 instead.
+
+If @var{x} is a vector, then @code{zscore (@var{x})} returns the z-score
+of the elements in @var{x}.
+
+If @var{x} is a matrix, then @code{zscore (@var{x})} returns a row vector
+with each element containing the z-score of the corresponding column in
+@var{x}.
+
+If @var{x} is an array, then @code{zscore (@var{x})} computes the z-score
+along the first non-singleton dimension of @var{x}.
+
+@c FIXME: Don't reference other DOCSTRING.  Document values and what they
+@c        mean in this function.
+The optional parameter @var{opt} determines the normalization to use when
+computing the standard deviation and has the same definition as the
+corresponding parameter for @code{std}.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension of @var{x},
+including any dimension exceeding @code{ndims (@var{x})}, will return
+@code{zeros (size (@var{x}))}.
+
+Specifying multiple dimensions with input @var{vecdim}, a vector of
+non-repeating dimensions, will operate along the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions of @var{x}, then it is
+equivalent to the option @qcode{"all"}.  Any dimension in @var{vecdim}
+greater than @code{ndims (@var{x})} is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{zscore} to
+operate on all elements of @var{x}, and is equivalent to
+@code{zscore (@var{x}(:))}.
+
+The optional variable @var{nanflag} specifies whether to include or exclude
+@code{NaN} values from the calculation using any of the previously specified
+input argument combinations.  The default value for @var{nanflag} is
+@qcode{"includenan"} which keeps @code{NaN} values in the calculation.  To
+exclude @code{NaN} values, set the value of @var{nanflag} to
+@qcode{"omitnan"}.  The output will still contain @code{NaN} values at the
+same locations as in @var{x}.
+
+The optional outputs @var{mu} and @var{sigma} contain the mean and standard
+deviation.
+
+@xseealso{@ref{XREFmean,,mean}, @ref{XREFstd,,std}, @ref{XREFcenter,,center}}
+@end deftypefn
+
+
+@c normalize scripts/statistics/normalize.m
+@anchor{XREFnormalize}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{z} =} normalize (@var{x})
+@deftypefnx {} {@var{z} =} normalize (@var{x}, @var{dim})
+@deftypefnx {} {@var{z} =} normalize (@dots{}, @var{method})
+@deftypefnx {} {@var{z} =} normalize (@dots{}, @var{method}, @var{option})
+@deftypefnx {} {@var{z} =} normalize (@dots{}, @var{scale}, @var{scaleoption}, @var{center}, @var{centeroption})
+@deftypefnx {} {[@var{z}, @var{c}, @var{s}] =} normalize (@dots{})
+Return a normalization of the data in @var{x} using one of several available
+scaling and centering methods.
+
+@code{normalize} by default will return the @code{zscore} of @var{x},
+defined as the number of standard deviations each element is from the mean
+of @var{x}.  This is equivalent to centering at the mean of the data and
+scaling by the standard deviation.  @var{x} must be a numeric array of
+double or single floating point numbers.
+
+The returned value @var{z} will have the same size as @var{x}.  The optional
+return variables @var{c} and @var{s} are the centering and scaling factors
+used in the normalization such that:
+
+@example
+@group
+  @tcode{@var{z} = (@var{x} - @var{c}) ./ @var{s}}
+@end group
+@end example
+
+If @var{x} is a vector, @code{normalize} will operate on the data in
+@var{x}.
+
+If @var{x} is a matrix, @code{normalize} will operate independently on
+each column in @var{x}.
+
+If @var{x} is an N-dimensional array, @code{normalize} will operate
+independently on the first non-singleton dimension in @var{x}.
+
+If the optional second argument @var{dim} is given, operate along this
+dimension.
+
+@code{normalize} ignores NaN values is @var{x} similar to the behavior of
+the omitnan option in @code{std}, @code{mean}, and @code{median}.
+
+The optional inputs @var{method} and @var{option} can be used to specify the
+type of normalization performed on @var{x}.  Note that only the
+@option{scale} and @option{center} options may be specified together using
+any of the methods defined below.  Valid normalization methods are:
+
+@table @code
+@item zscore
+(Default) Normalizes the elements in @var{x} to the scaled distance from a
+ central value.  Valid Options:
+
+@table @code
+@item std
+   (Default) Data is centered at @code{mean (@var{x})} and scaled by the
+     standard deviation.
+
+@item robust
+   Data is centered at @code{median (@var{x})} and scaled by the median
+   absolute deviation.
+@end table
+
+@item norm
+@var{z} is the general vector norm of @var{x}, with @var{option} being the
+normalization factor @var{p} that determines the vector norm type according
+to:
+@tex
+$$Z = \left (\sum_k \left | X_k \right |^P  \right )^{1/P}$$
+@end tex
+@ifnottex
+
+@example
+@group
+  @tcode{@var{z} = [sum (abs (@var{x}) .^ @var{p})] ^ (1/@var{p})}
+@end group
+@end example
+
+@end ifnottex
+@var{p} can be any positive scalar, specific values being:
+
+@table @code
+@item @var{p} = 1
+@var{x} is normalized by @code{sum (abs (@var{x}))}.
+
+@item @var{p} = 2
+   (Default) @var{x} is normalized by the Euclidian norm, or vector
+   magnitude, of the elements.
+
+@item @var{P} = Inf
+@var{x} is normalized by @code{max (abs (@var{x}))}.
+@end table
+
+@item scale
+@var{x} is scaled by a factor determined by @var{option}, which can be a
+numeric scalar or one of the following:
+
+@table @code
+@item std
+   (Default) @var{x} is scaled by its standard deviation.
+
+@item mad
+@var{x} is scaled by its median absolute deviation.
+
+@item first
+@var{x} is scaled by its first element.
+
+@item iqr
+@var{x} is scaled by its interquartile range.
+@end table
+
+@item range
+@var{x} is scaled to fit the range specified by @var{option} as a two
+element scalar row vector.  The default range is [0, 1].
+
+@item center
+@var{x} is shifted by an amount determined by @var{option}, which can be a
+numeric scalar or one of the following:
+
+@table @code
+@item mean
+   (Default) @var{x} is shifted by @code{mean (@var{x})}.
+
+@item median
+@var{x} is shifted by @code{median (@var{x})}.
+@end table
+
+@item medianiqr
+@var{x} is shifted by @code{median (@var{x})} and scaled by the
+interquartile range.
+@end table
+
+Known @sc{matlab} incompatibilities:
+
+@enumerate
+@item
+The option @option{DataVariables} is only available when input @var{x} is a
+table class, which is not yet implemented in core Octave.  See the
+@nospell{datatypes} and @nospell{tablicious} Octave Packages for an
+available overloaded method.
+@end enumerate
+
+@xseealso{@ref{XREFzscore,,zscore}, @ref{XREFiqr,,iqr}, @ref{XREFnorm,,norm}, @ref{XREFrescale,,rescale}, @ref{XREFstd,,std}, @ref{XREFmedian,,median}, @ref{XREFmean,,mean}, @ref{XREFmad,,mad}}
+@end deftypefn
+
+
+@c histc scripts/statistics/histc.m
+@anchor{XREFhistc}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{n} =} histc (@var{x}, @var{edges})
+@deftypefnx {} {@var{n} =} histc (@var{x}, @var{edges}, @var{dim})
+@deftypefnx {} {[@var{n}, @var{idx}] =} histc (@dots{})
+Compute histogram counts.
+
+When @var{x} is a vector, the function counts the number of elements of
+@var{x} that fall in the histogram bins defined by @var{edges}.  This
+must be a vector of monotonically increasing values that define the edges
+of the histogram bins.
+@tex
+$n(k)$
+@end tex
+@ifnottex
+@code{@var{n}(k)}
+@end ifnottex
+contains the number of elements in @var{x} for which
+@tex
+$@var{edges}(k) <= @var{x} < @var{edges}(k+1)$.
+@end tex
+@ifnottex
+@code{@var{edges}(k) <= @var{x} < @var{edges}(k+1)}.
+@end ifnottex
+The final element of @var{n} contains the number of elements of @var{x}
+exactly equal to the last element of @var{edges}.
+
+When @var{x} is an @math{N}-dimensional array, the computation is carried
+out along dimension @var{dim}.  If not specified @var{dim} defaults to the
+first non-singleton dimension.
+
+When a second output argument is requested an index matrix is also returned.
+The @var{idx} matrix has the same size as @var{x}.  Each element of
+@var{idx} contains the index of the histogram bin in which the
+corresponding element of @var{x} was counted.
+@xseealso{@ref{XREFhist,,hist}}
+@end deftypefn
+
+
+@noindent
+@code{unique} function documented at @ref{XREFunique,,unique} is often
+useful for statistics.
+
+@c nchoosek scripts/specfun/nchoosek.m
+@anchor{XREFnchoosek}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{c} =} nchoosek (@var{n}, @var{k})
+@deftypefnx {} {@var{c} =} nchoosek (@var{set}, @var{k})
+
+Compute the binomial coefficient of @var{n} or list all possible
+combinations of a @var{set} of items.
+
+If @var{n} is a scalar then calculate the binomial coefficient
+of @var{n} and @var{k} which is defined as
+@tex
+$$
+ {n \choose k} = {n (n-1) (n-2) \cdots (n-k+1) \over k!}
+               = {n! \over k! (n-k)!}
+$$
+@end tex
+@ifnottex
+
+@example
+@group
+ /   \
+ | n |    n (n-1) (n-2) @dots{} (n-k+1)       n!
+ |   |  = ------------------------- =  ---------
+ | k |               k!                k! (n-k)!
+ \   /
+@end group
+@end example
+
+@end ifnottex
+@noindent
+This is the number of combinations of @var{n} items taken in groups of
+size @var{k}.
+
+If the first argument is a vector, @var{set}, then generate all
+combinations of the elements of @var{set}, taken @var{k} at a time, with
+one row per combination.  The result @var{c} has @var{k} columns and
+@w{@code{nchoosek (length (@var{set}), @var{k})}}@ rows.
+
+For example:
+
+How many ways can three items be grouped into pairs?
+
+@example
+@group
+nchoosek (3, 2)
+   @xresult{} 3
+@end group
+@end example
+
+What are the possible pairs?
+
+@example
+@group
+nchoosek (1:3, 2)
+   @xresult{}  1   2
+       1   3
+       2   3
+@end group
+@end example
+
+Programming Note: When calculating the binomial coefficient @code{nchoosek}
+works only for non-negative, integer arguments.  Use @code{bincoeff} for
+non-integer and negative scalar arguments, or for computing many binomial
+coefficients at once with vector inputs for @var{n} or @var{k}.
+
+@xseealso{@ref{XREFbincoeff,,bincoeff}, @ref{XREFperms,,perms}}
+@end deftypefn
+
+
+@c perms libinterp/corefcn/perms.cc
+@anchor{XREFperms}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{P} =} perms (@var{v})
+@deftypefnx {} {@var{P} =} perms (@var{v}, "unique")
+Generate all permutations of vector @var{v} with one row per permutation.
+
+Results are returned in reverse lexicographic order if @var{v} is in ascending
+order.  If @var{v} is in a different permutation, then the result is permuted
+that way too.  Consequently, an input in descending order yields a result in
+normal lexicographic order.  The result has size
+@code{factorial (@var{n}) * @var{n}}, where @var{n} is the length of @var{v}.
+Any repeated elements are included in the output.
+
+If the optional argument @qcode{"unique"} is given then only unique
+permutations are returned, using less memory and taking less time than calling
+@code{unique (perms (@var{v}), "rows")}.
+
+Example 1
+
+@example
+@group
+perms ([1, 2, 3])
+@xresult{}
+3   2   1
+3   1   2
+2   3   1
+2   1   3
+1   3   2
+1   2   3
+@end group
+@end example
+
+Example 2
+
+@example
+@group
+perms ([1, 1, 2, 2], "unique")
+@xresult{}
+2   2   1   1
+2   1   2   1
+2   1   1   2
+1   2   2   1
+1   2   1   2
+1   1   2   2
+@end group
+@end example
+
+Programming Note: If the @qcode{"unique"} option is not used, the length of
+@var{v} should be no more than 10-12 to limit memory consumption.  Even with
+@qcode{"unique"}, there should be no more than 10-12 unique elements in
+@var{v}.
+@xseealso{@ref{XREFpermute,,permute}, @ref{XREFrandperm,,randperm}, @ref{XREFnchoosek,,nchoosek}}
+
+@end deftypefn
+
+
+@c ranks scripts/statistics/ranks.m
+@anchor{XREFranks}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{y} =} ranks (@var{x})
+@deftypefnx {} {@var{y} =} ranks (@var{x}, @var{dim})
+@deftypefnx {} {@var{y} =} ranks (@var{x}, @var{dim}, @var{rtype})
+Return the ranks (in the sense of order statistics) of @var{x} along the
+first non-singleton dimension adjusted for ties.
+
+If the optional @var{dim} argument is given, operate along this dimension.
+
+The optional parameter @var{rtype} determines how ties are handled.  All
+examples below assume an input of @code{[ 1, 2, 2, 4 ]}.
+
+@table @asis
+@item 0 or @qcode{"fractional"} (default) for fractional ranking (1, 2.5,
+2.5, 4);
+
+@item 1 or @qcode{"competition"} for competition ranking (1, 2, 2, 4);
+
+@item 2 or @qcode{"modified"} for modified competition ranking (1, 3, 3, 4);
+
+@item 3 or @qcode{"ordinal"} for ordinal ranking (1, 2, 3, 4);
+
+@item 4 or @qcode{"dense"} for dense ranking (1, 2, 2, 3).
+@end table
+
+@xseealso{@ref{XREFspearman,,spearman}, @ref{XREFkendall,,kendall}}
+@end deftypefn
+
+
+@c run_count scripts/statistics/run_count.m
+@anchor{XREFrun_count}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{cnt} =} run_count (@var{x}, @var{n})
+@deftypefnx {} {@var{cnt} =} run_count (@var{x}, @var{n}, @var{dim})
+Count the upward runs along the first non-singleton dimension of @var{x}
+of length 1, 2, @dots{}, @var{n}-1 and greater than or equal to @var{n}.
+
+If the optional argument @var{dim} is given then operate along this
+dimension.
+@xseealso{@ref{XREFrunlength,,runlength}}
+@end deftypefn
+
+
+@c runlength scripts/statistics/runlength.m
+@anchor{XREFrunlength}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {count =} runlength (@var{x})
+@deftypefnx {} {[count, value] =} runlength (@var{x})
+Find the lengths of all sequences of common values.
+
+@var{count} is a vector with the lengths of each repeated value.
+
+The optional output @var{value} contains the value that was repeated in
+the sequence.
+
+@example
+@group
+runlength ([2, 2, 0, 4, 4, 4, 0, 1, 1, 1, 1])
+@xresult{}   2   1   3   1   4
+@end group
+@end example
+@xseealso{@ref{XREFrun_count,,run_count}}
+@end deftypefn
+
+
+@node Forecasting Metrics
+@section Forecasting Metrics
+
+Octave supports the following functions for calculating forecasting metrics.
+
+@c mape scripts/statistics/mape.m
+@anchor{XREFmape}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{E} =} mape (@var{F}, @var{A})
+@deftypefnx {} {@var{E} =} mape (@var{F}, @var{A}, @var{dim})
+@deftypefnx {} {@var{E} =} mape (@var{F}, @var{A}, @var{vecdim})
+@deftypefnx {} {@var{E} =} mape (@var{F}, @var{A}, "all")
+@deftypefnx {} {@var{E} =} mape (@dots{}, @var{nanflag})
+@deftypefnx {} {@var{E} =} mape (@dots{}, @var{zeroflag})
+@deftypefnx {} {@var{E} =} mape (@dots{}, @qcode{'Weights'}, @var{W})
+Compute the mean absolute percentage error between arrays.
+
+The mean absolute percentage error is defined as
+@tex
+$$ {\rm mape}(F, A) = {E} = {1\over N} \sum_{i=1}^N \left| {A_i - F_i}\over{A_i} \right| \times 100 $$
+where $N$ is the number of elements in @var{F} and @var{A} after
+broadcasting is applied to the subtraction operation.
+@end tex
+@ifnottex
+
+@example
+mape (@var{F}, @var{A}) = SUM_i (abs ((@var{A}(i) - @var{F}(i)) / @var{A}(i))) * 100 / N
+@end example
+
+@noindent
+where @math{N} is the number of elements in @var{F} and @var{A} after
+broadcasting is applied to the subtraction operation.
+
+@end ifnottex
+
+The weighted mean absolute percentage error is defined as
+@tex
+$$ {\rm mape_w}(F, A) = {E_W} =  {{\sum_{i=1}^N W_i\left| {A_i - F_i}\over{A_i} \right| \times 100} \over {\sum_{i=1}^N W_i}} $$
+where $N$ is the number of elements in @var{F} and @var{A} after
+broadcasting is applied to the subtraction operation.
+@end tex
+@ifnottex
+
+@example
+weighted_mape (@var{F}, @var{A}) = SUM_i (@var{W}(i) * (abs ((@var{A}(i) - @var{F}(i)) / @var{A}(i)))) * 100 / SUM_i (@var{W}(i)
+@end example
+
+@noindent
+where @math{N} is the number of elements in @var{F} and @var{A} after
+broadcasting is applied to the subtraction operation.
+
+@end ifnottex
+
+@var{F} and @var{A} must either be the same size or have compatible sizes.
+
+If @var{F} and @var{A} are vectors of the same size, then
+@code{mape (@var{F}, @var{A})} returns a scalar with the MAPE between the
+elements of @var{F} and @var{A}.
+
+If @code{@var{A} - @var{F}} is a matrix, then @code{mape (@var{F}, @var{A})}
+returns a row vector with each element containing the MAPE between the
+corresponding columns of @code{@var{A} - @var{F}}.
+
+If @code{@var{A} - @var{F}} is an array, then @code{mape (@var{F}, @var{A})}
+computes the MAPE along the first non-singleton dimension of the difference
+between the input arrays @var{F} and @var{A}.  The size of @var{E} along the
+operating dimension is 1, while all other dimensions are the same as in
+@code{@var{A} - @var{F}}.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension, including any
+dimension exceeding @code{ndims (@var{A} - @var{F})}, will return
+@code{abs ((@var{A} - @var{F}) ./ @var{A})}.
+
+Specifying the dimensions as @var{vecdim}, a vector of non-repeating
+dimensions, will return the mape over the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions in
+@code{@var{A} - @var{F}}, then it is equivalent to the option @qcode{"all"}.
+Any dimension in @var{vecdim} greater than @code{ndims (@var{A} - @var{F})}
+is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{mape} to operate
+on all elements of @code{@var{A} - @var{F}}, and is equivalent to
+@code{mape ((@var{A} - @var{F})(:))}.
+
+The optional variable @var{nanflag} specifies whether to include or exclude
+NaN values from the calculation using any of the previously specified input
+argument combinations.  The default value for @var{nanflag} is
+@qcode{"includenan"} which keeps NaN values in the calculation.  To exclude
+NaN values set the value of @var{nanflag} to @qcode{"omitnan"}.  The output
+will still contain NaN values if @code{@var{A} - @var{F}} consists of all
+NaN values in the operating dimension.
+
+The optional variable @var{zeroflag} specifies whether to include or omit
+zero values from the calculation using any of the previously specified input
+argument combinations.  The default value for @var{zeroflag} is
+@qcode{"includezero"}, in which case the calculated MAPE is Inf, if @var{A}
+contains one or more zeros.  To ignore any zero values in @var{A}, set the
+value of @var{zeroflag} to @qcode{"omitzero"}.  If @var{A} consists of all
+zero values in the operating dimension, then MAPE is NaN.
+
+The optional paired argument @code{@dots{}, "Weights", @var{W}} specifies a
+weighting scheme @var{W}, which is applied on the difference of the input
+arrays @var{F} and @var{A}, so that @code{mape} computes the weighted MAPE.
+When operating along a single dimension, @var{W} must be a vector of the
+same length as the operating dimension or it must have the same size as
+@var{x}.  When operating over an array slice defined by @var{vecdim},
+@var{W} must have the same size as the operating array slice, i.e.
+@code{size (@var{A} - @var{F})(@var{vecdim})}, or the same size as
+@code{@var{A} - @var{F}}.
+
+@xseealso{@ref{XREFrmse,,rmse}, @ref{XREFmean,,mean}, @ref{XREFabs,,abs}}
+@end deftypefn
+
+
+@c rmse scripts/statistics/rmse.m
+@anchor{XREFrmse}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{E} =} rmse (@var{F}, @var{A})
+@deftypefnx {} {@var{E} =} rmse (@var{F}, @var{A}, @var{dim})
+@deftypefnx {} {@var{E} =} rmse (@var{F}, @var{A}, @var{vecdim})
+@deftypefnx {} {@var{E} =} rmse (@var{F}, @var{A}, "all")
+@deftypefnx {} {@var{E} =} rmse (@dots{}, @var{nanflag})
+@deftypefnx {} {@var{E} =} rmse (@dots{}, @qcode{'Weights'}, @var{W})
+Compute the root mean squared error between arrays.
+
+The root mean squared error is defined as
+@tex
+$$ {\rm rmse}(F, A) = {E} = \sqrt{{1\over N} \sum_{i=1}^N {\left| {A_i - F_i} \right|}^2} $$
+where $N$ is the number of elements in @var{F} and @var{A} after
+broadcasting is applied to the subtraction operation.
+@end tex
+@ifnottex
+
+@example
+rmse (@var{F}, @var{A}) = sqrt (SUM_i ((@var{A}(i) - @var{F}(i)) ^ 2) / N)
+@end example
+
+@noindent
+where @math{N} is the number of elements in @var{F} and @var{A} after
+broadcasting is applied to the subtraction operation.
+
+@end ifnottex
+
+The weighted root mean squared error is defined as
+@tex
+$$ {\rm rmse}(F, A) = {E_W} = \sqrt{\sum_{i=1}^N W_i{\left| {A_i - F_i} \right|}^2 \over \sum_{i=1}^N W_i} $$
+where $N$ is the number of elements in @var{F} and @var{A} after
+broadcasting is applied to the subtraction operation.
+@end tex
+@ifnottex
+
+@example
+weighted_rmse (@var{F}, @var{A}) = sqrt (SUM_i (@var{W}(i) * ((@var{A}(i) - @var{F}(i)) ^ 2)) / SUM_i (@var{W}(i)))
+@end example
+
+@noindent
+where @math{N} is the number of elements in @var{F} and @var{A} after
+broadcasting is applied to the subtraction operation.
+
+@end ifnottex
+
+@var{F} and @var{A} must either be the same size or have compatible sizes.
+
+If @var{F} and @var{A} are vectors of the same size, then
+@code{rmse (@var{F}, @var{A})} returns a scalar with the RMSE between the
+elements of @var{F} and @var{A}.
+
+If @code{@var{A} - @var{F}} is a matrix, then @code{rmse (@var{F}, @var{A})}
+returns a row vector with each element containing the RMSE between the
+corresponding columns of @code{@var{A} - @var{F}}.
+
+If @code{@var{A} - @var{F}} is an array, then @code{rmse (@var{F}, @var{A})}
+computes the RMSE along the first non-singleton dimension of the difference
+between the input arrays @var{F} and @var{A}.  The size of @var{E} along the
+operating dimension is 1, while all other dimensions are the same as in
+@code{@var{A} - @var{F}}.
+
+The optional input @var{dim} specifies the dimension to operate on and must
+be a positive integer.  Specifying any singleton dimension, including any
+dimension exceeding @code{ndims (@var{A} - @var{F})}, will return
+@code{abs ((@var{A} - @var{F}) ./ @var{A})}.
+
+Specifying the dimensions as @var{vecdim}, a vector of non-repeating
+dimensions, will return the rmse over the array slice defined by
+@var{vecdim}.  If @var{vecdim} indexes all dimensions in
+@code{@var{A} - @var{F}}, then it is equivalent to the option @qcode{"all"}.
+Any dimension in @var{vecdim} greater than @code{ndims (@var{A} - @var{F})}
+is ignored.
+
+Specifying the dimension as @qcode{"all"} will cause @code{rmse} to operate
+on all elements of @code{@var{A} - @var{F}}, and is equivalent to
+@code{rmse ((@var{A} - @var{F})(:))}.
+
+The optional variable @var{nanflag} specifies whether to include or exclude
+NaN values from the calculation using any of the previously specified input
+argument combinations.  The default value for @var{nanflag} is
+@qcode{"includenan"} which keeps NaN values in the calculation.  To exclude
+NaN values set the value of @var{nanflag} to @qcode{"omitnan"}.  The output
+will still contain NaN values if @code{@var{A} - @var{F}} consists of all
+NaN values in the operating dimension.
+
+The optional paired argument @code{@dots{}, "Weights", @var{W}} specifies a
+weighting scheme @var{W}, which is applied on the difference of the input
+arrays @var{F} and @var{A}, so that @code{rmse} computes the weighted RMSE.
+When operating along a single dimension, @var{W} must be a vector of the
+same length as the operating dimension or it must have the same size as
+@var{x}.  When operating over an array slice defined by @var{vecdim},
+@var{W} must have the same size as the operating array slice, i.e.
+@code{size (@var{A} - @var{F})(@var{vecdim})}, or the same size as
+@code{@var{A} - @var{F}}.
+
+@xseealso{@ref{XREFmape,,mape}, @ref{XREFmeansq,,meansq}, @ref{XREFrms,,rms}}
+@end deftypefn
+
+
+@node Correlation and Regression Analysis
+@section Correlation and Regression Analysis
+
+Octave supports several functions for investigating the relationship between
+sets of quantitative variables.
+
+@c cov scripts/statistics/cov.m
+@anchor{XREFcov}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{c} =} cov (@var{x})
+@deftypefnx {} {@var{c} =} cov (@var{x}, @var{y})
+@deftypefnx {} {@var{c} =} cov (@dots{}, @var{opt})
+@deftypefnx {} {@var{c} =} cov (@dots{}, @var{nanflag})
+Compute the covariance matrix.
+
+The covariance between two variable vectors @var{A} and  @var{B} is
+calculated as:
+@tex
+$$
+\sigma_{ij} = {1 \over N-1} \sum_{i=1}^N (a_i - \bar{a})(b_i - \bar{b})
+$$
+where $\bar{a}$ and $\bar{b}$ are the mean values of $a$ and $b$ and $N$ is
+the length of the vectors $a$ and $b$.
+@end tex
+@ifnottex
+
+@example
+cov (@var{a},@var{b}) = 1/(N-1) * SUM_i (@var{a}(i) - mean (@var{a})) * (@var{b}(i) - mean (@var{b}))
+@end example
+
+@noindent
+where @math{N} is the length of the vectors @var{a} and @var{b}.
+@end ifnottex
+
+If called with one argument, compute @code{cov (@var{x}, @var{x})}.  If
+@var{x} is a vector, this is the scalar variance of @var{x}.  If @var{x} is
+a matrix, each row of @var{x} is treated as an observation, and each column
+as a variable, and the @w{(@var{i}, @var{j})-th}@ entry of
+@code{cov (@var{x})} is the covariance between the @var{i}-th and
+@var{j}-th columns in @var{x}.  If @var{x} has dimensions n x m, the output
+@var{c} will be a m x m square covariance matrix.
+
+If called with two arguments, compute @code{cov (@var{x}, @var{y})}, the
+covariance between two random variables @var{x} and @var{y}.  @var{x} and
+@var{y} must have the same number of elements, and will be treated as
+vectors with the covariance computed as
+@code{cov (@var{x}(:), @var{y}(:))}.  The output will be a 2 x 2
+covariance matrix.
+
+The optional argument @var{opt} determines the type of normalization to
+use.  Valid values are
+
+@table @asis
+@item 0 [default]:
+  Normalize with @math{N-1}.  This provides the best unbiased estimator of
+the covariance.
+
+@item 1:
+  Normalize with @math{N}.  This provides the second moment around the
+mean.  @var{opt} is set to 1 for N = 1.
+@end table
+
+The optional argument @var{nanflag} must appear last in the argument list
+and controls how NaN values are handled by @code{cov}.  The three valid
+values are:
+
+@table @asis
+@item includenan [default]:
+  Leave NaN values in @var{x} and @var{y}.  Output will follow the normal
+rules for handling NaN values in arithmetic operations.
+
+@item omitrows:
+  Rows containing NaN values are trimmed from both @var{x} and @var{y}
+prior to calculating the covariance.  A NaN in one variable will remove
+that row from both @var{x} and @var{y}.
+
+@item partialrows:
+  Rows containing NaN values are ignored from both @var{x} and @var{y}
+  independently for each @var{i}-th and @var{j}-th covariance
+  calculation.  This may result in a different number of observations,
+@math{N}, being used to calculated each element of the covariance matrix.
+@end table
+
+Compatibility Note: Before Octave v9.1.0, @code{cov} treated rows
+@var{x} and @var{y} as multivariate random variables.  Newer versions
+attempt to maintain full compatibility with @sc{matlab} by treating
+@var{x} and @var{y} as two univariate distributions regardless of shape,
+resulting in a 2x2 output matrix.  Code relying on Octave's previous
+definition will need to be modified when running this newer version of
+@code{cov}.  The previous behavior can be obtained by using the
+NaN package's @code{covm} function as @code{covm (@var{x}, @var{y}, "D")}.
+@xseealso{@ref{XREFcorr,,corr}}
+@end deftypefn
+
+
+@c corr scripts/statistics/corr.m
+@anchor{XREFcorr}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{r} =} corr (@var{x})
+@deftypefnx {} {@var{r} =} corr (@var{x}, @var{y})
+Compute matrix of correlation coefficients.
+
+If each row of @var{x} and @var{y} is an observation and each column is
+a variable, then the @w{(@var{i}, @var{j})-th}@ entry of
+@code{corr (@var{x}, @var{y})} is the correlation between the
+@var{i}-th variable in @var{x} and the @var{j}-th variable in @var{y}.
+@var{x} and @var{y} must have the same number of rows (observations).  The
+correlation coefficient is calculated for two variable vectors @var{A} and
+@var{B} (columns of @var{x} and @var{y}) as:
+@tex
+$$
+{\rm corr}(A,B) = {{\rm cov}(A,B) \over {\rm std}(A) \, {\rm std}(B)}
+$$
+@end tex
+@ifnottex
+
+@example
+corr (@var{A},@var{B}) = cov (@var{A},@var{B}) / (std (@var{A}) * std (@var{B}))
+@end example
+
+The output variable @var{r} will have size n x m, where n and m are the
+number of variables (columns) in @var{x} and @var{y}, respectively.  Note
+that as the standard deviation of any scalar is zero, the correlation
+coefficient will be returned as NaN for any scalar or single-row inputs.
+
+@end ifnottex
+If called with one argument, compute @code{corr (@var{x}, @var{x})},
+the correlation between the each pair of columns of @var{x}.
+@xseealso{@ref{XREFcov,,cov}, @ref{XREFcorrcoef,,corrcoef}}
+@end deftypefn
+
+
+@c corrcoef scripts/statistics/corrcoef.m
+@anchor{XREFcorrcoef}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{r} =} corrcoef (@var{x})
+@deftypefnx {} {@var{r} =} corrcoef (@var{x}, @var{y})
+@deftypefnx {} {@var{r} =} corrcoef (@dots{}, @var{param}, @var{value}, @dots{})
+@deftypefnx {} {[@var{r}, @var{p}] =} corrcoef (@dots{})
+@deftypefnx {} {[@var{r}, @var{p}, @var{lci}, @var{hci}] =} corrcoef (@dots{})
+Compute a matrix of correlation coefficients.
+
+@var{x} is an array where each column contains a variable and each row is
+an observation.
+
+If a second input @var{y} (of the same size as @var{x}) is given then
+calculate the correlation coefficients between @var{x} and @var{y}.
+
+@var{param}, @var{value} are optional pairs of parameters and values which
+modify the calculation.  Valid options are:
+
+@table @asis
+@item @qcode{"alpha"}
+Confidence level used for the bounds of the confidence interval, @var{lci}
+and @var{hci}.  Default is 0.05, i.e., 95% confidence interval.
+
+@item @qcode{"rows"}
+Determine processing of NaN values.  Acceptable values are @qcode{"all"},
+@qcode{"complete"}, and @qcode{"pairwise"}.  Default is @qcode{"all"}.
+With @qcode{"complete"}, only the rows without NaN values are considered.
+With @qcode{"pairwise"}, the selection of NaN-free rows is made for each
+pair of variables.
+@end table
+
+Output @var{r} is a matrix of Pearson's product moment correlation
+coefficients for each pair of variables.
+
+Output @var{p} is a matrix of pair-wise p-values testing for the null
+hypothesis of a correlation coefficient of zero.
+
+Outputs @var{lci} and @var{hci} are matrices containing, respectively, the
+lower and higher bounds of the 95% confidence interval of each correlation
+coefficient.
+@xseealso{@ref{XREFcorr,,corr}, @ref{XREFcov,,cov}, @ref{XREFstd,,std}}
+@end deftypefn
+
+
+@c corrcov scripts/statistics/corrcov.m
+@anchor{XREFcorrcov}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{r} =} corrcov (@var{c})
+@deftypefnx {} {[@var{r}, @var{s}] =} corrcov (@var{c})
+Convert matrix of covariance coefficients to a matrix of correlation
+coefficients.
+
+Given a numeric, square, symmetric, and positive semi-definite matrix of
+covariance coefficients, @var{c}, calculate the corresponding linear
+correlation coefficient matrix, @var{r}, that would be produced from the
+same variables that produced @var{c}.
+
+The correlation and covariance coefficients for two vectors, @var{A} and
+@var{B}, are related by:
+
+@tex
+$$
+{\rm corr}(A,B) = {{\rm cov}(A,B) \over \sqrt{{\rm cov}(A,A) \cdot  {\rm cov}(B,B)}}
+$$
+@end tex
+@ifnottex
+
+@example
+corr (@var{A},@var{B}) = cov (@var{A},@var{B}) / sqrt (cov (@var{A},@var{A}) * cov (@var{B},@var{B}))
+@end example
+
+@end ifnottex
+
+The output @var{r} will be the same shape and type as the input, @var{c},
+where each element @var{r}(@var{i},@var{j}) contains the correlation
+coefficient calculated using @var{c}(@var{i},@var{j}) as described above.
+
+If the optional output @var{s} is requested, it will contain a column vector
+of the standard deviations of the variables that produced the covariance
+matrix @var{c}.  Noting that the variances of the variables are contained in
+the main diagonal of @var{c}, this is equivalent output to
+@w{@code{sqrt (diag ( @var{c}))}}.
+
+Implementation Note: A proper covariance matrix as produced by @code{cov} is
+square, symmetric, and positive semi-definite.  @code{corrcov} only uses an
+approximate check for the latter that may pass improper inputs with small
+negative eigenvalues.
+
+@xseealso{@ref{XREFcov,,cov}, @ref{XREFcorr,,corr}, @ref{XREFcorrcoef,,corrcoef}}
+@end deftypefn
+
+
+@c spearman scripts/statistics/spearman.m
+@anchor{XREFspearman}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{rho} =} spearman (@var{x})
+@deftypefnx {} {@var{rho} =} spearman (@var{x}, @var{y})
+@cindex Spearman's Rho
+Compute Spearman's rank correlation coefficient
+@tex
+$\rho$.
+@end tex
+@ifnottex
+@var{rho}.
+@end ifnottex
+
+For two data vectors @var{x} and @var{y}, Spearman's
+@tex
+$\rho$
+@end tex
+@ifnottex
+@var{rho}
+@end ifnottex
+is the correlation coefficient of the ranks of @var{x} and @var{y}.
+
+If @var{x} and @var{y} are drawn from independent distributions,
+@tex
+$\rho$
+@end tex
+@ifnottex
+@var{rho}
+@end ifnottex
+has zero mean and variance
+@tex
+$1 / (N - 1)$,
+@end tex
+@ifnottex
+@code{1 / (N - 1)},
+@end ifnottex
+where @math{N} is the length of the @var{x} and @var{y} vectors, and is
+asymptotically normally distributed.
+
+@code{spearman (@var{x})} is equivalent to
+@code{spearman (@var{x}, @var{x})}.
+@xseealso{@ref{XREFranks,,ranks}, @ref{XREFkendall,,kendall}}
+@end deftypefn
+
+
+@c kendall scripts/statistics/kendall.m
+@anchor{XREFkendall}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{tau} =} kendall (@var{x})
+@deftypefnx {} {@var{tau} =} kendall (@var{x}, @var{y})
+@cindex Kendall's Tau
+Compute Kendall's
+@tex
+$\tau$.
+@end tex
+@ifnottex
+@var{tau}.
+@end ifnottex
+
+For two data vectors @var{x}, @var{y} of common length @math{N}, Kendall's
+@tex
+$\tau$
+@end tex
+@ifnottex
+@var{tau}
+@end ifnottex
+is the correlation of the signs of all rank differences of
+@var{x} and @var{y}; i.e., if both @var{x} and @var{y} have distinct
+entries, then
+@tex
+$$ \tau = {1 \over N(N-1)} \sum_{i,j} {\rm sign}(q_i-q_j) \, {\rm sign}(r_i-r_j) $$
+@end tex
+@ifnottex
+
+@example
+@group
+         1
+@var{tau} = -------   SUM sign (@var{q}(i) - @var{q}(j)) * sign (@var{r}(i) - @var{r}(j))
+      N (N-1)   i,j
+@end group
+@end example
+
+@end ifnottex
+@noindent
+in which the
+@tex
+$q_i$ and $r_i$
+@end tex
+@ifnottex
+@var{q}(i) and @var{r}(i)
+@end ifnottex
+are the ranks of @var{x} and @var{y}, respectively.
+
+If @var{x} and @var{y} are drawn from independent distributions,
+Kendall's
+@tex
+$\tau$
+@end tex
+@ifnottex
+@var{tau}
+@end ifnottex
+is asymptotically normal with mean 0 and variance
+@tex
+${2 (2N+5) \over 9N(N-1)}$.
+@end tex
+@ifnottex
+@code{(2 * (2N+5)) / (9 * N * (N-1))}.
+@end ifnottex
+
+@code{kendall (@var{x})} is equivalent to @code{kendall (@var{x},
+@var{x})}.
+@xseealso{@ref{XREFranks,,ranks}, @ref{XREFspearman,,spearman}}
+@end deftypefn
+
+
+@node Distributions
+@section Distributions
+
+Octave has functions for computing the Probability Density Function (PDF), the
+Cumulative Distribution function (CDF), and the quantile (the inverse of the
+CDF) for arbitrary user-defined distributions (discrete) and for experimental
+data (empirical).
+
+The following table summarizes the supported distributions (in alphabetical
+order).
+
+@tex
+\vskip 6pt
+{\hbox to \hsize {\hfill\vbox{\offinterlineskip \tabskip=0pt
+\halign{
+\vrule height2.0ex depth1.ex width 0.6pt #\tabskip=0.3em &
+# \hfil & \vrule # & # \hfil & \vrule # & # \hfil & \vrule # & # \hfil &
+# \vrule width 0.6pt \tabskip=0pt\cr
+\noalign{\hrule height 0.6pt}
+& {\bf Distribution} && {\bf PDF}      && {\bf CDF}     && {\bf Quantile}&\cr
+\noalign{\hrule}
+&Univariate Discrete       && discrete\_pdf  && discrete\_cdf && discrete\_inv&\cr
+&Empirical    && empirical\_pdf  && empirical\_cdf && empirical\_inv&\cr
+\noalign{\hrule height 0.6pt}
+}}\hfill}}
+@end tex
+@ifnottex
+@multitable @columnfractions .31 .23 .23 .23
+@headitem Distribution
+  @tab PDF
+  @tab CDF
+  @tab Quantile
+@item Univariate Discrete Distribution
+  @tab @code{discrete_pdf}
+  @tab @code{discrete_cdf}
+  @tab @code{discrete_inv}
+@item Empirical Distribution
+  @tab @code{empirical_pdf}
+  @tab @code{empirical_cdf}
+  @tab @code{empirical_inv}
+@end multitable
+@end ifnottex
+
+@c discrete_pdf scripts/statistics/discrete_pdf.m
+@anchor{XREFdiscrete_pdf}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{pdf} =} discrete_pdf (@var{x}, @var{v}, @var{p})
+For each element of @var{x}, compute the probability density function (PDF)
+at @var{x} of a univariate discrete distribution which assumes the values
+in @var{v} with probabilities @var{p}.
+@end deftypefn
+
+
+@c discrete_cdf scripts/statistics/discrete_cdf.m
+@anchor{XREFdiscrete_cdf}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{cdf} =} discrete_cdf (@var{x}, @var{v}, @var{p})
+For each element of @var{x}, compute the cumulative distribution function
+(CDF) at @var{x} of a univariate discrete distribution which assumes the
+values in @var{v} with probabilities @var{p}.
+@end deftypefn
+
+
+@c discrete_inv scripts/statistics/discrete_inv.m
+@anchor{XREFdiscrete_inv}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{q} =} discrete_inv (@var{x}, @var{v}, @var{p})
+For each element of @var{x}, compute the quantile (the inverse of the CDF)
+at @var{x} of the univariate distribution which assumes the values in
+@var{v} with probabilities @var{p}.
+@end deftypefn
+
+
+@c empirical_pdf scripts/statistics/empirical_pdf.m
+@anchor{XREFempirical_pdf}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{pdf} =} empirical_pdf (@var{x}, @var{data})
+For each element of @var{x}, compute the probability density function (PDF)
+at @var{x} of the empirical distribution obtained from the
+univariate sample @var{data}.
+@end deftypefn
+
+
+@c empirical_cdf scripts/statistics/empirical_cdf.m
+@anchor{XREFempirical_cdf}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{cdf} =} empirical_cdf (@var{x}, @var{data})
+For each element of @var{x}, compute the cumulative distribution function
+(CDF) at @var{x} of the empirical distribution obtained from
+the univariate sample @var{data}.
+@end deftypefn
+
+
+@c empirical_inv scripts/statistics/empirical_inv.m
+@anchor{XREFempirical_inv}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn {} {@var{q} =} empirical_inv (@var{x}, @var{data})
+For each element of @var{x}, compute the quantile (the inverse of the CDF)
+at @var{x} of the empirical distribution obtained from the
+univariate sample @var{data}.
+@end deftypefn
+
+
+@node Random Number Generation
+@section Random Number Generation
+
+Octave can generate random numbers from a large number of distributions.  The
+random number generators are based on the random number generators described in
+@ref{Special Utility Matrices}.
+
+The following table summarizes the available random number generators (in
+alphabetical order).
+
+@tex
+\vskip 6pt
+{\hbox to \hsize {\hfill\vbox{\offinterlineskip \tabskip=0pt
+\halign{
+\vrule height2.0ex depth1.ex width 0.6pt #\tabskip=0.3em &
+# \hfil & \vrule # & # \hfil & # \vrule width 0.6pt \tabskip=0pt\cr
+\noalign{\hrule height 0.6pt}
+& {\bf Distribution}                && {\bf Function} &\cr
+\noalign{\hrule}
+& Univariate Discrete Distribution  && discrete\_rnd &\cr
+& Empirical Distribution            && empirical\_rnd &\cr
+& Exponential Distribution          && rande &\cr
+& Gamma Distribution                && randg &\cr
+& Poisson Distribution              && randp &\cr
+& Standard Normal Distribution      && randn &\cr
+& Uniform Distribution              && rand &\cr
+& Uniform Distribution (integers)   && randi &\cr
+\noalign{\hrule height 0.6pt}
+}}\hfill}}
+@end tex
+@ifnottex
+@multitable @columnfractions .4 .3
+@headitem Distribution                  @tab Function
+@item Univariate Discrete Distribution  @tab @code{discrete_rnd}
+@item Empirical Distribution            @tab @code{empirical_rnd}
+@item Exponential Distribution          @tab @code{rande}
+@item Gamma Distribution                @tab @code{randg}
+@item Poisson Distribution              @tab @code{randp}
+@item Standard Normal Distribution      @tab @code{randn}
+@item Uniform Distribution              @tab @code{rand}
+@item Uniform Distribution (integers)   @tab @code{randi}
+@end multitable
+@end ifnottex
+
+@c discrete_rnd scripts/statistics/discrete_rnd.m
+@anchor{XREFdiscrete_rnd}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{rnd} =} discrete_rnd (@var{v}, @var{p})
+@deftypefnx {} {@var{rnd} =} discrete_rnd (@var{v}, @var{p}, @var{r})
+@deftypefnx {} {@var{rnd} =} discrete_rnd (@var{v}, @var{p}, @var{r}, @var{c}, @dots{})
+@deftypefnx {} {@var{rnd} =} discrete_rnd (@var{v}, @var{p}, [@var{sz}])
+Return a matrix of random samples from the univariate distribution which
+assumes the values in @var{v} with probabilities @var{p}.
+
+When called with a single size argument, return a square matrix with
+the dimension specified.  When called with more than one scalar argument the
+first two arguments are taken as the number of rows and columns and any
+further arguments specify additional matrix dimensions.  The size may also
+be specified with a vector of dimensions @var{sz}.
+
+If no size arguments are given then the result matrix is the common size of
+@var{v} and @var{p}.
+@end deftypefn
+
+
+@c empirical_rnd scripts/statistics/empirical_rnd.m
+@anchor{XREFempirical_rnd}
+@html
+<span style="display:block; margin-top:-4.5ex;">&nbsp;</span>
+@end html
+
+
+@deftypefn  {} {@var{rnd} =} empirical_rnd (@var{data})
+@deftypefnx {} {@var{rnd} =} empirical_rnd (@var{data}, @var{r})
+@deftypefnx {} {@var{rnd} =} empirical_rnd (@var{data}, @var{r}, @var{c}, @dots{})
+@deftypefnx {} {@var{rnd} =} empirical_rnd (@var{data}, [@var{sz}])
+Return a matrix of random samples from the empirical distribution obtained
+from the univariate sample @var{data}.
+
+When called with a single size argument, return a square matrix with
+the dimension specified.  When called with more than one scalar argument the
+first two arguments are taken as the number of rows and columns and any
+further arguments specify additional matrix dimensions.  The size may also
+be specified with a vector of dimensions @var{sz}.
+
+If no size arguments are given then the result matrix is a random ordering
+of the sample @var{data}.
+@end deftypefn
+

@@ -1,0 +1,370 @@
+@c DO NOT EDIT!  Generated automatically by genpropdoc.m.
+
+@c Copyright (C) 2014-2026 The Octave Project Developers
+@c
+@c See the file COPYRIGHT.md in the top-level directory of this
+@c distribution or <https://octave.org/copyright/>.
+@c
+@c This file is part of Octave.
+@c
+@c Octave is free software: you can redistribute it and/or modify it
+@c under the terms of the GNU General Public License as published by
+@c the Free Software Foundation, either version 3 of the License, or
+@c (at your option) any later version.
+@c
+@c Octave is distributed in the hope that it will be useful, but
+@c WITHOUT ANY WARRANTY; without even the implied warranty of
+@c MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+@c GNU General Public License for more details.
+@c
+@c You should have received a copy of the GNU General Public License
+@c along with Octave; see the file COPYING.  If not, see
+@c <https://www.gnu.org/licenses/>.
+
+Properties of @code{uicontrol} objects (@pxref{XREFuicontrol,,uicontrol}):
+
+@subsubheading Categories:
+
+@ref{XREFuicontrolcategoryAppearance,,@w{Appearance}}@: | @ref{XREFuicontrolcategoryCallbackExecution,,@w{Callback Execution}}@: | @ref{XREFuicontrolcategoryControlOptions,,@w{Control Options}}@: | @ref{XREFuicontrolcategoryCreation/Deletion,,@w{Creation/Deletion}}@: | @ref{XREFuicontrolcategoryDisplay,,@w{Display}}@: | @ref{XREFuicontrolcategoryMouseInteraction,,@w{Mouse Interaction}}@: | @ref{XREFuicontrolcategoryObjectIdentification,,@w{Object Identification}}@: | @ref{XREFuicontrolcategoryObjectPosition,,@w{Object Position}}@: | @ref{XREFuicontrolcategoryParent/Children,,@w{Parent/Children}}@: | @ref{XREFuicontrolcategoryTextAppearance,,@w{Text Appearance}}@: 
+
+@anchor{XREFuicontrolcategoryAppearance}
+@subsubheading Appearance
+
+@table @asis
+
+@anchor{XREFuicontrolbackgroundcolor}
+@prindex uicontrol backgroundcolor
+@item @code{backgroundcolor}: colorspec, def. @code{[0.9400   0.9400   0.9400]}
+The color value of the background of this control object.
+
+
+@anchor{XREFuicontrolcdata}
+@prindex uicontrol cdata
+@item @code{cdata}: array, def. @code{[](0x0)}
+Image data used to represent the control object, stored as a M x N x 3 RGB array.
+
+
+@anchor{XREFuicontrolextent}
+@prindex uicontrol extent
+@item @code{extent} (read-only): four-element vector
+Size of the text string associated to the uicontrol returned in the form @code{[0 0 width height]} (the two first elements are always zero).
+
+For multi-line strings the returned @code{width} and @code{height} indicate the size of the rectangle enclosing all lines.
+
+
+@anchor{XREFuicontrolforegroundcolor}
+@prindex uicontrol foregroundcolor
+@item @code{foregroundcolor}: colorspec, def. @code{[0   0   0]}
+The color value of the text for this control object.  @xref{Colors,,colorspec}.
+
+
+@anchor{XREFuicontrolstyle}
+@prindex uicontrol style
+@item @code{style}: @qcode{"checkbox"} | @qcode{"edit"} | @qcode{"frame"} | @qcode{"listbox"} | @qcode{"popupmenu"} | @{@qcode{"pushbutton"}@} | @qcode{"radiobutton"} | @qcode{"slider"} | @qcode{"text"} | @qcode{"togglebutton"}
+The type of control object created.  For a complete description of available control styles, see the @ref{XREFuicontrol,,@w{@qcode{"uicontrol"} function}}
+
+@end table
+
+@anchor{XREFuicontrolcategoryCallbackExecution}
+@subsubheading Callback Execution
+
+@table @asis
+
+@anchor{XREFuicontrolbusyaction}
+@prindex uicontrol busyaction
+@item @code{busyaction}: @qcode{"cancel"} | @{@qcode{"queue"}@}
+Define how Octave handles the execution of this object's callback properties when it is unable to interrupt another object's executing callback.  This is only relevant when the currently executing callback object has its @code{interruptible} property set to @qcode{"off"}.  The @code{busyaction} property of the interrupting callback object indicates whether the interrupting callback is queued (@qcode{"queue"} (default)) or discarded (@qcode{"cancel"}).
+@xref{Callbacks,,@w{Callbacks section}}.
+
+
+@anchor{XREFuicontrolcallback}
+@prindex uicontrol callback
+@item @code{callback}: string, def. @code{[](0x0)}
+A string consisting of a valid Octave expression that will be executed whenever this control is activated.
+
+
+@anchor{XREFuicontrolinterruptible}
+@prindex uicontrol interruptible
+@item @code{interruptible}: @qcode{"off"} | @{@qcode{"on"}@}
+Specify whether this object's callback functions may be interrupted by other callbacks.  By default @code{interruptible} is @qcode{"on"} and callbacks that make use of @code{drawnow}, @code{figure}, @code{waitfor}, @code{getframe} or @code{pause} functions are eventually interrupted.
+@xref{Callbacks,,@w{Callbacks section}}.
+
+
+@anchor{XREFuicontrolkeypressfcn}
+@prindex uicontrol keypressfcn
+@item @code{keypressfcn}: string | function handle, def. @code{[](0x0)}
+Callback function executed when a key is pressed while the uicontrol object has focus.  The first argument to the function is the handle of the calling uicontrol.  The second argument holds an event structure which has the following members:
+@table @code
+@item Character:
+The ASCII value of the key
+@item Modifier:
+A cell array containing strings representing the modifiers pressed with the key.
+@item Key:
+Lowercase description of the key
+@item Source:
+Graphics handle of the object executing the callback function
+@item EventName:
+"KeyPress"
+@end table
+
+For information on how to write graphics listener functions, @pxref{Callbacks,,@w{Callbacks section}}.
+
+@end table
+
+@anchor{XREFuicontrolcategoryControlOptions}
+@subsubheading Control Options
+
+@table @asis
+
+@anchor{XREFuicontrolenable}
+@prindex uicontrol enable
+@item @code{enable}: @qcode{"inactive"} | @qcode{"off"} | @{@qcode{"on"}@}
+Sets whether this control object is active or is grayed out.
+
+
+@anchor{XREFuicontrollistboxtop}
+@prindex uicontrol listboxtop
+@item @code{listboxtop}: scalar, def. @code{1}
+The index of the string option that will appear at the top of "listbox" controls 
+
+
+@anchor{XREFuicontrolmax}
+@prindex uicontrol max
+@item @code{max}: scalar, def. @code{1}
+The maximum control value, whose effect on the control is dependent on the control type.  For @qcode{"checkbox"}, @qcode{"togglebutton"}, and @qcode{"radiobutton"} controls, the @qcode{"max"} value is assigned to the @qcode{"value"} property when the control object is selected.  For @qcode{"slider"} controls, @qcode{"max"} defines the maximum value of the slider.  For @qcode{"edit"} and @qcode{"listbox"} controls, if @code{Max - Min > 1}, then the control will permit multiple line entries or list item selections, respectively.
+
+
+@anchor{XREFuicontrolmin}
+@prindex uicontrol min
+@item @code{min}: scalar, def. @code{0}
+The minimum control value, whose effect on the control is dependent on the control type.  For @qcode{"checkbox"}, @qcode{"togglebutton"}, and @qcode{"radiobutton"} controls, the @qcode{"min"} value is assigned to the @qcode{"value"} property when the control object is not selected.  For @qcode{"slider"} controls, @qcode{"min"} defines the minimum value of the slider.  For @qcode{"edit"} and @qcode{"listbox"} controls, if @code{Max - Min > 1}, then the control will permit multiple line entries or list item selections, respectively.
+
+
+@anchor{XREFuicontrolsliderstep}
+@prindex uicontrol sliderstep
+@item @code{sliderstep}: two-element vector, def. @code{[0.010000   0.100000]}
+The fractional step size, measured relative to the @code{Min - Max} span of the slider, that the slider moves when the user clicks on the object.  @qcode{"sliderstep"} is specified as a two-element vector consisting of @code{[minor major]}, where @qcode{"minor"} is the step size for clicking on the slider arrows, and @qcode{"major"} is the step size for clicking within the slider bar.
+
+
+@anchor{XREFuicontrolvalue}
+@prindex uicontrol value
+@item @code{value}: scalar, def. @code{0}
+A numerical value associated with the current state of the control object, with the meaning of the value dependent on the "style" of the control object.
+
+@end table
+
+@anchor{XREFuicontrolcategoryCreation/Deletion}
+@subsubheading Creation/Deletion
+
+@table @asis
+
+@anchor{XREFuicontrolbeingdeleted}
+@prindex uicontrol beingdeleted
+@item @code{beingdeleted}: @{@qcode{"off"}@} | @qcode{"on"}
+Property indicating that a function has initiated deletion of the object.  @code{beingdeleted} is set to true until the object no longer exists.
+
+
+@anchor{XREFuicontrolcreatefcn}
+@prindex uicontrol createfcn
+@item @code{createfcn}: string | function handle, def. @code{[](0x0)}
+Callback function executed immediately after uicontrol has been created.  Function is set by using default property on root object, e.g., @code{set (groot, "defaultuicontrolcreatefcn", 'disp ("uicontrol created!")')}.
+
+For information on how to write graphics listener functions, @pxref{Callbacks,,@w{Callbacks section}}.
+
+
+@anchor{XREFuicontroldeletefcn}
+@prindex uicontrol deletefcn
+@item @code{deletefcn}: string | function handle, def. @code{[](0x0)}
+Callback function executed immediately before uicontrol is deleted.
+
+For information on how to write graphics listener functions, @pxref{Callbacks,,@w{Callbacks section}}.
+
+@end table
+
+@anchor{XREFuicontrolcategoryDisplay}
+@subsubheading Display
+
+@table @asis
+
+@anchor{XREFuicontrolclipping}
+@prindex uicontrol clipping
+@item @code{clipping}: @qcode{"off"} | @{@qcode{"on"}@}
+If @code{clipping} is @qcode{"on"}, the uicontrol is clipped in its parent axes limits.
+
+
+@anchor{XREFuicontrolvisible}
+@prindex uicontrol visible
+@item @code{visible}: @qcode{"off"} | @{@qcode{"on"}@}
+If @code{visible} is @qcode{"off"}, the uicontrol is not rendered on screen.
+
+@end table
+
+@anchor{XREFuicontrolcategoryMouseInteraction}
+@subsubheading Mouse Interaction
+
+@table @asis
+
+@anchor{XREFuicontrolbuttondownfcn}
+@prindex uicontrol buttondownfcn
+@item @code{buttondownfcn}: string | function handle, def. @code{[](0x0)}
+For information on how to write graphics listener functions, @pxref{Callbacks,,@w{Callbacks section}}.
+
+
+@anchor{XREFuicontrolcontextmenu}
+@prindex uicontrol contextmenu
+@item @code{contextmenu}: graphics handle, def. @code{[](0x0)}
+Graphics handle of the uicontextmenu object that is currently associated to this uicontrol object.
+
+
+@anchor{XREFuicontrolhittest}
+@prindex uicontrol hittest
+@item @code{hittest}: @qcode{"off"} | @{@qcode{"on"}@}
+Specify whether uicontrol processes mouse events or passes them to ancestors of the object.  When enabled, the object may respond to mouse clicks by evaluating the @qcode{"buttondownfcn"}, showing the uicontextmenu, and eventually becoming the root @qcode{"currentobject"}.  This property is only relevant when the object can accept mouse clicks which is determined by the @qcode{"pickableparts"} property.  @xref{XREFuicontrolpickableparts,,@w{pickableparts property}}.
+
+
+@anchor{XREFuicontrolpickableparts}
+@prindex uicontrol pickableparts
+@item @code{pickableparts}: @qcode{"all"} | @qcode{"none"} | @{@qcode{"visible"}@}
+Specify whether uicontrol will accept mouse clicks.  By default, @code{pickableparts} is @qcode{"visible"} and only visible parts of the uicontrol or its children may react to mouse clicks.  When @code{pickableparts} is @qcode{"all"} both visible and invisible parts (or children) may react to mouse clicks.  When @code{pickableparts} is @qcode{"none"} mouse clicks on the object are ignored and transmitted to any objects underneath this one.  When an object is configured to accept mouse clicks the @qcode{"hittest"} property will determine how they are processed.  @xref{XREFuicontrolhittest,,@w{hittest property}}.
+
+
+@anchor{XREFuicontrolselected}
+@prindex uicontrol selected
+@item @code{selected}: @{@qcode{"off"}@} | @qcode{"on"}
+Property indicates whether this uicontrol is selected.
+
+
+@anchor{XREFuicontrolselectionhighlight}
+@prindex uicontrol selectionhighlight
+@item @code{selectionhighlight}: @qcode{"off"} | @{@qcode{"on"}@}
+If @code{selectionhighlight} is @qcode{"on"}, then the uicontrol's selection state is visually highlighted.
+
+
+@anchor{XREFuicontroltooltipstring}
+@prindex uicontrol tooltipstring
+@item @code{tooltipstring}: string, def. @qcode{""}
+A text string that appears in a tooltip when the mouse pointer hovers over the control object.
+
+@end table
+
+@anchor{XREFuicontrolcategoryObjectIdentification}
+@subsubheading Object Identification
+
+@table @asis
+
+@anchor{XREFuicontroltag}
+@prindex uicontrol tag
+@item @code{tag}: string, def. @qcode{""}
+A user-defined string to label the graphics object.
+
+
+@anchor{XREFuicontroltype}
+@prindex uicontrol type
+@item @code{type} (read-only): string
+Class name of the graphics object.  @code{type} is always @qcode{"uicontrol"}.
+
+
+@anchor{XREFuicontroluserdata}
+@prindex uicontrol userdata
+@item @code{userdata}: Any Octave data, def. @code{[](0x0)}
+User-defined data to associate with the graphics object.
+
+@end table
+
+@anchor{XREFuicontrolcategoryObjectPosition}
+@subsubheading Object Position
+
+@table @asis
+
+@anchor{XREFuicontrolposition}
+@prindex uicontrol position
+@item @code{position}: four-element vector, def. @code{[0    0   80   30]}
+Size of the control object represented as the four-element vector [left, bottom, width, height].
+
+
+@anchor{XREFuicontrolunits}
+@prindex uicontrol units
+@item @code{units}: @qcode{"centimeters"} | @qcode{"characters"} | @qcode{"inches"} | @qcode{"normalized"} | @{@qcode{"pixels"}@} | @qcode{"points"}
+Unit of measurement used to interpret the @qcode{"position"} property.
+
+@end table
+
+@anchor{XREFuicontrolcategoryParent/Children}
+@subsubheading Parent/Children
+
+@table @asis
+
+@anchor{XREFuicontrolchildren}
+@prindex uicontrol children
+@item @code{children} (read-only): vector of graphics handles, def. @code{[](0x0)}
+Graphics handles of the uicontrol's children.
+
+
+@anchor{XREFuicontrolhandlevisibility}
+@prindex uicontrol handlevisibility
+@item @code{handlevisibility}: @qcode{"callback"} | @qcode{"off"} | @{@qcode{"on"}@}
+If @code{handlevisibility} is @qcode{"off"}, the uicontrol's handle is not visible in its parent's @qcode{"children"} property.
+
+
+@anchor{XREFuicontrolparent}
+@prindex uicontrol parent
+@item @code{parent}: graphics handle
+Handle of the parent graphics object.
+
+@end table
+
+@anchor{XREFuicontrolcategoryTextAppearance}
+@subsubheading Text Appearance
+
+@table @asis
+
+@anchor{XREFuicontrolfontangle}
+@prindex uicontrol fontangle
+@item @code{fontangle}: @qcode{"italic"} | @{@qcode{"normal"}@}
+Control whether the font is italic or normal.
+
+
+@anchor{XREFuicontrolfontname}
+@prindex uicontrol fontname
+@item @code{fontname}: string, def. @qcode{"*"}
+Name of font used for text rendering.  When setting this property, the text rendering engine will search for a matching font in your system.  If none is found then text is rendered using a default sans serif font (same as the default @qcode{"*"} value).
+
+Programming Note: On systems that don’t use FontConfig natively (all but Linux), the font cache is built when Octave is installed.  You will need to run @code{system ("fc-cache -fv")} manually after installing new fonts.
+
+
+@anchor{XREFuicontrolfontsize}
+@prindex uicontrol fontsize
+@item @code{fontsize}: scalar, def. @code{10}
+Size of the font used for text rendering.  @xref{XREFuicontrolfontunits,,fontunits property}.
+
+
+@anchor{XREFuicontrolfontunits}
+@prindex uicontrol fontunits
+@item @code{fontunits}: @qcode{"centimeters"} | @qcode{"inches"} | @qcode{"normalized"} | @qcode{"pixels"} | @{@qcode{"points"}@}
+Units used to interpret the @qcode{"fontsize"} property.
+
+
+@anchor{XREFuicontrolfontweight}
+@prindex uicontrol fontweight
+@item @code{fontweight}: @qcode{"bold"} | @{@qcode{"normal"}@}
+Control the variant of the base font used for text rendering.
+
+
+@anchor{XREFuicontrolhorizontalalignment}
+@prindex uicontrol horizontalalignment
+@item @code{horizontalalignment}: @{@qcode{"center"}@} | @qcode{"left"} | @qcode{"right"}
+Specifies the horizontal justification of the text within the uicontrol object.
+
+
+@anchor{XREFuicontrolstring}
+@prindex uicontrol string
+@item @code{string}: string, def. @qcode{""}
+The text appearing with the control object.
+
+
+@anchor{XREFuicontrolverticalalignment}
+@prindex uicontrol verticalalignment
+@item @code{verticalalignment}: @qcode{"bottom"} | @{@qcode{"middle"}@} | @qcode{"top"}
+Specifies the vertical position of the text in the uicontrol object.
+
+@end table

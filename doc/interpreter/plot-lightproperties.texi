@@ -1,0 +1,208 @@
+@c DO NOT EDIT!  Generated automatically by genpropdoc.m.
+
+@c Copyright (C) 2014-2026 The Octave Project Developers
+@c
+@c See the file COPYRIGHT.md in the top-level directory of this
+@c distribution or <https://octave.org/copyright/>.
+@c
+@c This file is part of Octave.
+@c
+@c Octave is free software: you can redistribute it and/or modify it
+@c under the terms of the GNU General Public License as published by
+@c the Free Software Foundation, either version 3 of the License, or
+@c (at your option) any later version.
+@c
+@c Octave is distributed in the hope that it will be useful, but
+@c WITHOUT ANY WARRANTY; without even the implied warranty of
+@c MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+@c GNU General Public License for more details.
+@c
+@c You should have received a copy of the GNU General Public License
+@c along with Octave; see the file COPYING.  If not, see
+@c <https://www.gnu.org/licenses/>.
+
+Properties of @code{light} objects (@pxref{XREFlight,,light}):
+
+@subsubheading Categories:
+
+@ref{XREFlightcategoryCallbackExecution,,@w{Callback Execution}}@: | @ref{XREFlightcategoryCreation/Deletion,,@w{Creation/Deletion}}@: | @ref{XREFlightcategoryDisplay,,@w{Display}}@: | @ref{XREFlightcategoryLighting,,@w{Lighting}}@: | @ref{XREFlightcategoryMouseInteraction,,@w{Mouse Interaction}}@: | @ref{XREFlightcategoryObjectIdentification,,@w{Object Identification}}@: | @ref{XREFlightcategoryParent/Children,,@w{Parent/Children}}@: 
+
+@anchor{XREFlightcategoryCallbackExecution}
+@subsubheading Callback Execution
+
+@table @asis
+
+@anchor{XREFlightbusyaction}
+@prindex light busyaction
+@item @code{busyaction}: @qcode{"cancel"} | @{@qcode{"queue"}@}
+Define how Octave handles the execution of this object's callback properties when it is unable to interrupt another object's executing callback.  This is only relevant when the currently executing callback object has its @code{interruptible} property set to @qcode{"off"}.  The @code{busyaction} property of the interrupting callback object indicates whether the interrupting callback is queued (@qcode{"queue"} (default)) or discarded (@qcode{"cancel"}).
+@xref{Callbacks,,@w{Callbacks section}}.
+
+
+@anchor{XREFlightinterruptible}
+@prindex light interruptible
+@item @code{interruptible}: @qcode{"off"} | @{@qcode{"on"}@}
+Specify whether this object's callback functions may be interrupted by other callbacks.  By default @code{interruptible} is @qcode{"on"} and callbacks that make use of @code{drawnow}, @code{figure}, @code{waitfor}, @code{getframe} or @code{pause} functions are eventually interrupted.
+@xref{Callbacks,,@w{Callbacks section}}.
+
+@end table
+
+@anchor{XREFlightcategoryCreation/Deletion}
+@subsubheading Creation/Deletion
+
+@table @asis
+
+@anchor{XREFlightbeingdeleted}
+@prindex light beingdeleted
+@item @code{beingdeleted}: @{@qcode{"off"}@} | @qcode{"on"}
+Property indicating that a function has initiated deletion of the object.  @code{beingdeleted} is set to true until the object no longer exists.
+
+
+@anchor{XREFlightcreatefcn}
+@prindex light createfcn
+@item @code{createfcn}: string | function handle, def. @code{[](0x0)}
+Callback function executed immediately after light has been created.  Function is set by using default property on root object, e.g., @code{set (groot, "defaultlightcreatefcn", 'disp ("light created!")')}.
+
+For information on how to write graphics listener functions, @pxref{Callbacks,,@w{Callbacks section}}.
+
+
+@anchor{XREFlightdeletefcn}
+@prindex light deletefcn
+@item @code{deletefcn}: string | function handle, def. @code{[](0x0)}
+Callback function executed immediately before light is deleted.
+
+For information on how to write graphics listener functions, @pxref{Callbacks,,@w{Callbacks section}}.
+
+@end table
+
+@anchor{XREFlightcategoryDisplay}
+@subsubheading Display
+
+@table @asis
+
+@anchor{XREFlightclipping}
+@prindex light clipping
+@item @code{clipping}: @qcode{"off"} | @{@qcode{"on"}@}
+If @code{clipping} is @qcode{"on"}, the light is clipped in its parent axes limits.
+
+
+@anchor{XREFlightvisible}
+@prindex light visible
+@item @code{visible}: @qcode{"off"} | @{@qcode{"on"}@}
+If @code{visible} is @qcode{"off"}, the light is not rendered on screen.
+
+@end table
+
+@anchor{XREFlightcategoryLighting}
+@subsubheading Lighting
+
+@table @asis
+
+@anchor{XREFlightcolor}
+@prindex light color
+@item @code{color}: colorspec, def. @code{[1   1   1]}
+Color of the light source.  @xref{Colors,,colorspec}.
+
+
+@anchor{XREFlightposition}
+@prindex light position
+@item @code{position}: def. @code{[1   0   1]}
+Position of the light source.
+
+
+@anchor{XREFlightstyle}
+@prindex light style
+@item @code{style}: @{@qcode{"infinite"}@} | @qcode{"local"}
+This string defines whether the light emanates from a light source at infinite distance (@qcode{"infinite"}) or from a local point source (@qcode{"local"}).
+
+@end table
+
+@anchor{XREFlightcategoryMouseInteraction}
+@subsubheading Mouse Interaction
+
+@table @asis
+
+@anchor{XREFlightbuttondownfcn}
+@prindex light buttondownfcn
+@item @code{buttondownfcn}: string | function handle, def. @code{[](0x0)}
+For information on how to write graphics listener functions, @pxref{Callbacks,,@w{Callbacks section}}.
+
+
+@anchor{XREFlightcontextmenu}
+@prindex light contextmenu
+@item @code{contextmenu}: graphics handle, def. @code{[](0x0)}
+Graphics handle of the uicontextmenu object that is currently associated to this light object.
+
+
+@anchor{XREFlighthittest}
+@prindex light hittest
+@item @code{hittest}: @qcode{"off"} | @{@qcode{"on"}@}
+Specify whether light processes mouse events or passes them to ancestors of the object.  When enabled, the object may respond to mouse clicks by evaluating the @qcode{"buttondownfcn"}, showing the uicontextmenu, and eventually becoming the root @qcode{"currentobject"}.  This property is only relevant when the object can accept mouse clicks which is determined by the @qcode{"pickableparts"} property.  @xref{XREFlightpickableparts,,@w{pickableparts property}}.
+
+
+@anchor{XREFlightpickableparts}
+@prindex light pickableparts
+@item @code{pickableparts}: @qcode{"all"} | @qcode{"none"} | @{@qcode{"visible"}@}
+Specify whether light will accept mouse clicks.  By default, @code{pickableparts} is @qcode{"visible"} and only visible parts of the light or its children may react to mouse clicks.  When @code{pickableparts} is @qcode{"all"} both visible and invisible parts (or children) may react to mouse clicks.  When @code{pickableparts} is @qcode{"none"} mouse clicks on the object are ignored and transmitted to any objects underneath this one.  When an object is configured to accept mouse clicks the @qcode{"hittest"} property will determine how they are processed.  @xref{XREFlighthittest,,@w{hittest property}}.
+
+
+@anchor{XREFlightselected}
+@prindex light selected
+@item @code{selected}: @{@qcode{"off"}@} | @qcode{"on"}
+Property indicates whether this light is selected.
+
+
+@anchor{XREFlightselectionhighlight}
+@prindex light selectionhighlight
+@item @code{selectionhighlight}: @qcode{"off"} | @{@qcode{"on"}@}
+If @code{selectionhighlight} is @qcode{"on"}, then the light's selection state is visually highlighted.
+
+@end table
+
+@anchor{XREFlightcategoryObjectIdentification}
+@subsubheading Object Identification
+
+@table @asis
+
+@anchor{XREFlighttag}
+@prindex light tag
+@item @code{tag}: string, def. @qcode{""}
+A user-defined string to label the graphics object.
+
+
+@anchor{XREFlighttype}
+@prindex light type
+@item @code{type} (read-only): string
+Class name of the graphics object.  @code{type} is always @qcode{"light"}.
+
+
+@anchor{XREFlightuserdata}
+@prindex light userdata
+@item @code{userdata}: Any Octave data, def. @code{[](0x0)}
+User-defined data to associate with the graphics object.
+
+@end table
+
+@anchor{XREFlightcategoryParent/Children}
+@subsubheading Parent/Children
+
+@table @asis
+
+@anchor{XREFlightchildren}
+@prindex light children
+@item @code{children} (read-only): vector of graphics handles, def. @code{[](0x0)}
+light objects have no child objects.  @code{children} is unused.
+
+
+@anchor{XREFlighthandlevisibility}
+@prindex light handlevisibility
+@item @code{handlevisibility}: @qcode{"callback"} | @qcode{"off"} | @{@qcode{"on"}@}
+If @code{handlevisibility} is @qcode{"off"}, the light's handle is not visible in its parent's @qcode{"children"} property.
+
+
+@anchor{XREFlightparent}
+@prindex light parent
+@item @code{parent}: graphics handle
+Handle of the parent graphics object.
+
+@end table
