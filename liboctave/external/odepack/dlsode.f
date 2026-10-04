@@ -1390,7 +1390,7 @@ C-----------------------------------------------------------------------
       MXNCF = 10
 C Initial call to F.  (LF0 points to YH(*,2).) -------------------------
       LF0 = LYH + NYH
-      CALL F (NEQ, T, Y, RWORK(LF0))
+      CALL F (NEQ, T, Y, RWORK(LF0), JERR)
       NFE = 1
 C Load the initial value vector in YH. ---------------------------------
       DO 115 I = 1,N

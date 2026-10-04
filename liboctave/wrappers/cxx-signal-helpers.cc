@@ -192,7 +192,7 @@ signal_watcher (void *arg)
 void
 octave_create_interrupt_watcher_thread (octave_sig_handler *handler)
 {
-#if ! defined (__WIN32__)
+#if ! defined (__WIN32__) && ! defined (__EMSCRIPTEN__)
   pthread_t sighandler_thread_id;
 
   if (pthread_create (&sighandler_thread_id, 0, signal_watcher,

@@ -20028,6 +20028,18 @@ fi
 
   test -n "$PTHREAD_CXX" && break
 done
+
+# Octave-Full-Wasm: emscripten 下跳过 AX_PTHREAD（Octave-Full-Wasm 平台补丁）
+# 保留 pthread.h 检测（HAVE_PTHREAD_H=1，gnulib 于是不生成替代头），
+# 但清空 AX_PTHREAD 的结论，使 PTHREAD_CFLAGS/LIBS 为空。
+# 这样全树不带 -pthread，wasm 内存不会是 shared，浏览器侧免 COOP/COEP。
+case $host in
+  *-emscripten*)
+    ax_pthread_ok=no
+    PTHREAD_CFLAGS=""
+    PTHREAD_LIBS=""
+    ;;
+esac
 test -n "$PTHREAD_CXX" || PTHREAD_CXX="$CXX"
 
 fi
@@ -20044,6 +20056,18 @@ esac
 fi
 
 test -n "$PTHREAD_CC" || PTHREAD_CC="$CC"
+
+# Octave-Full-Wasm: emscripten 下跳过 AX_PTHREAD（Octave-Full-Wasm 平台补丁）
+# 保留 pthread.h 检测（HAVE_PTHREAD_H=1，gnulib 于是不生成替代头），
+# 但清空 AX_PTHREAD 的结论，使 PTHREAD_CFLAGS/LIBS 为空。
+# 这样全树不带 -pthread，wasm 内存不会是 shared，浏览器侧免 COOP/COEP。
+case $host in
+  *-emscripten*)
+    ax_pthread_ok=no
+    PTHREAD_CFLAGS=""
+    PTHREAD_LIBS=""
+    ;;
+esac
 test -n "$PTHREAD_CXX" || PTHREAD_CXX="$CXX"
 
 
@@ -30806,7 +30830,7 @@ printf "%s\n" "$ld_shlibs_CXX" >&6; }
 predep_objects_CXX=
 postdep_objects_CXX=
 predeps_CXX=
-postdeps_CXX=
+postdeps_CXX=''
 compiler_lib_search_path_CXX=
 
 cat > conftest.$ac_ext <<_LT_EOF
@@ -36787,7 +36811,6 @@ else
   #       All existing logic for this use-case is still in place in case
   #       someone would like to base on that to build static versions of the
   #       libraries.
-  as_fn_error $? "Building shared libraries is required!" "$LINENO" 5
 fi
 
 
@@ -43119,15 +43142,15 @@ printf "%s\n" "no" >&6; }
   ;;
 esac
 
-## Check if C and Fortran compilers support -fexceptions to support unwinding
+## Check if C and Fortran compilers support -fwasm-exceptions to support unwinding
 ## the stack for C++ exceptions through frames in C or Fortran code.
 
 # CFLAGS are used only in the configure script.
 # XTRA_CFLAGS are used only after the configure script.
 
-  ac_safe=`echo "-fexceptions" | $SED 'y% ./+-:=%___p___%'`
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether ${CC-cc} accepts -fexceptions" >&5
-printf %s "checking whether ${CC-cc} accepts -fexceptions... " >&6; }
+  ac_safe=`echo "-fwasm-exceptions" | $SED 'y% ./+-:=%___p___%'`
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether ${CC-cc} accepts -fwasm-exceptions" >&5
+printf %s "checking whether ${CC-cc} accepts -fwasm-exceptions... " >&6; }
   if eval test \${octave_cv_cc_flag_$ac_safe+y}
 then :
   printf %s "(cached) " >&6
@@ -43139,7 +43162,7 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
     ac_octave_save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -fexceptions"
+    CFLAGS="$CFLAGS -fwasm-exceptions"
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -43181,10 +43204,10 @@ fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 
-  CFLAGS="$CFLAGS -fexceptions"
-  XTRA_CFLAGS="$XTRA_CFLAGS -fexceptions"
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: adding -fexceptions to XTRA_CFLAGS" >&5
-printf "%s\n" "$as_me: adding -fexceptions to XTRA_CFLAGS" >&6;}
+  CFLAGS="$CFLAGS -fwasm-exceptions"
+  XTRA_CFLAGS="$XTRA_CFLAGS -fwasm-exceptions"
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: adding -fwasm-exceptions to XTRA_CFLAGS" >&5
+printf "%s\n" "$as_me: adding -fwasm-exceptions to XTRA_CFLAGS" >&6;}
   else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
@@ -43192,9 +43215,9 @@ printf "%s\n" "no" >&6; }
   fi
 
 
-  ac_safe=`echo "-fexceptions" | $SED 'y%./+-:=%__p___%'`
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether ${F77-g77} accepts -fexceptions" >&5
-printf %s "checking whether ${F77-g77} accepts -fexceptions... " >&6; }
+  ac_safe=`echo "-fwasm-exceptions" | $SED 'y%./+-:=%__p___%'`
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether ${F77-g77} accepts -fwasm-exceptions" >&5
+printf %s "checking whether ${F77-g77} accepts -fwasm-exceptions... " >&6; }
   if eval test \${octave_cv_f77_flag_$ac_safe+y}
 then :
   printf %s "(cached) " >&6
@@ -43206,7 +43229,7 @@ ac_link='$F77 -o conftest$ac_exeext $FFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_f77_compiler_gnu
 
     ac_octave_save_FFLAGS="$FFLAGS"
-    FFLAGS="$FFLAGS -fexceptions"
+    FFLAGS="$FFLAGS -fwasm-exceptions"
     cat > conftest.$ac_ext <<_ACEOF
       program main
 
@@ -43233,9 +43256,9 @@ fi
   if eval "test \"`echo '$octave_cv_f77_flag_'$ac_safe`\" = yes"; then
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-    FFLAGS="$FFLAGS -fexceptions"
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: adding -fexceptions to FFLAGS" >&5
-printf "%s\n" "adding -fexceptions to FFLAGS" >&6; }
+    FFLAGS="$FFLAGS -fwasm-exceptions"
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: adding -fwasm-exceptions to FFLAGS" >&5
+printf "%s\n" "adding -fwasm-exceptions to FFLAGS" >&6; }
   else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
@@ -104562,7 +104585,7 @@ fi
 ### be built.  Note that there is no longer a way to build the Qt GUI
 ### without also building a Qt widget that uses OpenGL graphics so we
 ### check $build_qt_gui instead of $build_qt_graphics here.
-if test $build_qt_gui = no && test $build_fltk_graphics = no; then
+if false; then
   opengl_graphics=no
 else
   opengl_graphics=yes
@@ -111851,7 +111874,7 @@ postdep_objects_CXX='`$ECHO "$postdep_objects_CXX" | $SED "$delay_single_quote_s
 postdep_objects_F77='`$ECHO "$postdep_objects_F77" | $SED "$delay_single_quote_subst"`'
 predeps_CXX='`$ECHO "$predeps_CXX" | $SED "$delay_single_quote_subst"`'
 predeps_F77='`$ECHO "$predeps_F77" | $SED "$delay_single_quote_subst"`'
-postdeps_CXX='`$ECHO "$postdeps_CXX" | $SED "$delay_single_quote_subst"`'
+postdeps_CXX=''
 postdeps_F77='`$ECHO "$postdeps_F77" | $SED "$delay_single_quote_subst"`'
 compiler_lib_search_path_CXX='`$ECHO "$compiler_lib_search_path_CXX" | $SED "$delay_single_quote_subst"`'
 compiler_lib_search_path_F77='`$ECHO "$compiler_lib_search_path_F77" | $SED "$delay_single_quote_subst"`'

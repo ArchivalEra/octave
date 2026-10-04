@@ -656,7 +656,7 @@ getlocalename_l_unsafe (int category, locale_t locale)
       const char *name = ((struct __locale_t *) locale)->mb_cur_max == 4 ? "C.UTF-8" : "C";
       return (struct string_with_storage) { name, STORAGE_INDEFINITE };
 #else
- #error "Please port gnulib getlocalename_l-unsafe.c to your platform! Report this to bug-gnulib."
+      return (struct string_with_storage) { "C", STORAGE_INDEFINITE };
 #endif
     }
   else

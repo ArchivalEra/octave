@@ -104,7 +104,7 @@ C If MITER = 2, make N calls to F to approximate J. --------------------
         R = MAX(SRUR*ABS(YJ),R0/EWT(J))
         Y(J) = Y(J) + R
         FAC = -HL0/R
-        CALL F (NEQ, TN, Y, FTEM)
+        CALL F (NEQ, TN, Y, FTEM, JERR)
         DO 220 I = 1,N
  220      WM(I+J1) = (FTEM(I) - SAVF(I))*FAC
         Y(J) = YJ
@@ -126,7 +126,7 @@ C If MITER = 3, construct a diagonal approximation to J and P. ---------
       R = EL0*0.1D0
       DO 310 I = 1,N
  310    Y(I) = Y(I) + R*(H*SAVF(I) - YH(I,2))
-      CALL F (NEQ, TN, Y, WM(3))
+      CALL F (NEQ, TN, Y, WM(3), JERR)
       NFE = NFE + 1
       DO 320 I = 1,N
         R0 = H*SAVF(I) - YH(I,2)
@@ -169,7 +169,7 @@ C If MITER = 5, make MBAND calls to F to approximate J. ----------------
           YI = Y(I)
           R = MAX(SRUR*ABS(YI),R0/EWT(I))
  530      Y(I) = Y(I) + R
-        CALL F (NEQ, TN, Y, FTEM)
+        CALL F (NEQ, TN, Y, FTEM, JERR)
         DO 550 JJ = J,N,MBAND
           Y(JJ) = YH(JJ,1)
           YJJ = Y(JJ)
