@@ -32,12 +32,23 @@
 // this file.
 
 #include <ostream>
+#include <type_traits>
 
 #include "Array-oct.h"
 #include "Array-util.h"
 #include "mappers.h"
 #include "oct-error.h"
 #include "oct-locbuf.h"
+
+/* 【插件缝 · rust-sort】（工单 63 候选③；部件插件契约的"源缝"类）。
+   弱符号可选分派：链接 librustsort.a（build/113/build-rustsort.sh 产物）时
+   走 Rust stable sort（IEEE 754 比较语义、稳定序，G2 差分门 22 域逐位一致，
+   test/fixtures/rustsort-spike）；不链接则符号为空，走 octave_sort<T> 原路。
+   取下补丁 = relink 不带 RUST_SORT 旋钮——树对象零改动，不打在补丁上。 */
+extern "C" {
+void octave_rust_sort_f64 (double *v, long long n, int descending)
+  __attribute__ ((weak));
+}
 
 // One dimensional array class.  Handles the reference counting for
 // all the derived classes.
@@ -1866,7 +1877,16 @@ Array<T, Alloc>::sort (int dim, sortmode mode) const
             }
 
           // sort.
-          lsort.sort (v, kl);
+          if constexpr (std::is_same_v<T, double>)
+            {
+              if (octave_rust_sort_f64)
+                octave_rust_sort_f64 (v, static_cast<long long> (kl),
+                                      mode == DESCENDING ? 1 : 0);
+              else
+                lsort.sort (v, kl);
+            }
+          else
+            lsort.sort (v, kl);
 
           if (ku < ns)
             {
